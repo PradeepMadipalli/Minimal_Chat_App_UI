@@ -1,0 +1,129 @@
+<section style="background-color: #eee;">
+    <div class="container py-5">
+        <button type="button" style="float: right;" class="btn btn-danger ml-5 mt-2" (click)="logout()">logout</button>
+
+        <div class="row">
+
+            <div class="col-md-6 col-lg-5 col-xl-4 mb-4 mb-md-0">
+
+                <h5 class="font-weight-bold mb-3 text-center text-lg-start">Member</h5>
+
+                <div class="card">
+                    <div class="card-body">
+
+                        <ul class="list-unstyled mb-0 nav nav-tabs" id="myTab" role="tablist"
+                            *ngFor="let user of users">
+                            <li class="p-2 border-bottom mb-1 nav-item" style="background-color: #eee;">
+                                <a class=" d-flex justify-content-between nav-link" data-bs-toggle="tab"
+                                    data-bs-target="#profile" role="tab" type="button" aria-controls="profile"
+                                    (click)="receverclick(user.userId ,user.userName)" aria-selected="false">
+                                    <div class="d-flex flex-row">
+                                        <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-8.webp"
+                                            alt="avatar"
+                                            class="rounded-circle d-flex align-self-center me-3 shadow-1strong"
+                                            width="60">
+                                        <div class="pt-1">
+                                            <p class="fw-bold mb-0">{{user.userName}}</p>
+
+                                        </div>
+                                    </div>
+                                    <div class="pt-1">
+                                        <p class="small text-muted mb-1">Just now</p>
+                                        <span class="badge bg-danger float-end"></span>
+                                    </div>
+                                </a>
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-6 col-lg-7 col-xl-8 tab-content" id="myTabContent">
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <ul class="list-unstyled" *ngFor="let mess of messagess ; let i = index"
+                        (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
+                        <li class="d-flex justify-content-between mb-4" *ngIf="mess.senderId == currentUser">
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-6.webp" alt="avatar"
+                                class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between p-3">
+                                    <p class="fw-bold mb-0">{{currentusername}}</p>
+                                    <p class="text-muted small mb-0"><i
+                                            class="far fa-clock"></i>{{getTimeElapsed(mess.timestamp)}}</p>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">
+                                        {{mess.content}}
+                                    </p>
+                                    <div class="buttons" *ngIf="showButtons[i]">
+                                        <button (click)="editMessage(i)">Edit</button>
+                                        <button (click)="deleteMessage(i)">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="d-flex justify-content-between mb-4" *ngIf="mess.senderId !== currentUser">
+                            <div class="card w-100">
+                                <div class="card-header d-flex justify-content-between p-3">
+                                    <p class="fw-bold mb-0">{{mreceverusername+" "}}</p>
+                                    <p class="text-muted small mb-0"><i
+                                            class="far fa-clock"></i>{{getTimeElapsed(mess.timestamp)}}</p>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">
+                                        {{mess.content}}
+                                    </p>
+                                </div>
+                            </div>
+                            <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-5.webp" alt="avatar"
+                                class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60">
+                        </li>
+                    </ul>
+
+                </div>
+
+            </div>
+          
+                <footer style="float: right;" class="row" *ngIf="messageEnable">
+                    <div class="list-unstyled col-md-3 col-lg-5 col-xl-4">
+                        user
+                    </div>
+
+                    <ul class="list-unstyled col-md-6 col-lg-7 col-xl-8">
+                        <li class="bg-white mb-3">
+
+                            <div class="fromContriner" [formGroup]="messageForm">
+                                <textarea class="form-control" formControlName="message" [(ngModel)]="textArea"
+                                    id="textAreaExample2" rows="4">
+                            </textarea>
+
+
+                                <button (click)="isEmojiPickerVisible = !isEmojiPickerVisible;">😀</button>
+                                <br /><emoji-mart class="emoji-mart" *ngIf="isEmojiPickerVisible"
+                                    (emojiSelect)="addEmoji($event)" title="Choose your emoji"></emoji-mart>
+                                <label class="form-label" for="textAreaExample2">Message</label>
+                            </div>
+
+                            <div
+                                *ngIf="messageForm.get('message').invalid && (messageForm.get('message').dirty || messageForm.get('message').touched)">
+                                <div *ngIf="messageForm.get('message').errors.required">Message is required.</div>
+                                <div *ngIf="messageForm.get('message').errors.minlength">Message must be at least 5
+                                    characters long.</div>
+                                <div *ngIf="messageForm.get('message').errors.maxlength">Message cannot exceed 100
+                                    characters.</div>
+                            </div>
+
+                        </li>
+                        <button type="button" (click)="sendMessage()" [disabled]="messageForm.invalid"
+                            class="btn btn-info btn-rounded float-end">Send</button>
+                    </ul>
+
+                </footer>
+          
+        </div>
+
+    </div>
+</section>

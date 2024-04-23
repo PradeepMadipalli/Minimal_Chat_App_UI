@@ -37,9 +37,15 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "node_modules/bootstrap/scss/bootstrap.scss",
+              "node_modules/ngx-toastr/toastr.css",
+              "node_modules/@ctrl/ngx-emoji-mart/picker.css"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.min.js"
+            ]
+            
           },
           "configurations": {
             "production": {
@@ -104,5 +110,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "d19629d0-2a77-4678-913a-4f1e8099fbfa"
   }
 }

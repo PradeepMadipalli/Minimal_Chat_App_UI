@@ -1,10 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfigService } from '../services/config.service';
-import { ConversationHistoryRequest, EditMessageRequest, Sendmessages, repMessage } from '../model/registration.model';
+import { ConversationHistoryRequest, EditMessageRequest, RequestGroup, Sendmessages, repMessage } from '../model/registration.model';
 import { UserService } from '../services/user.service';
 import { ToastrService } from 'ngx-toastr';
 import { SignalrService } from '../services/signalr.service';
+import { GroupService } from '../services/group.service';
 
 @Component({
   selector: 'app-chat',
@@ -12,6 +13,18 @@ import { SignalrService } from '../services/signalr.service';
   styleUrl: './chat.component.scss'
 })
 export class ChatComponent {
+  @ViewChild('exampleModal') exampleModal: ElementRef;
+
+  options = [
+    { value: '1', label: 'One' },
+    { value: '2', label: 'Two' },
+    { value: '3', label: 'Three' },
+    { value: '4', label: 'Four' },
+    { value: '5', label: 'Five' },
+    { value: '6', label: 'Six' },
+    { value: '7', label: 'Seven' },
+    { value: '8', label: 'Eight' },
+  ];
   messages: any[] = [];
   messageid: string;
   newMessage: string = '';
@@ -19,40 +32,74 @@ export class ChatComponent {
   isEmojiPickerVisible: boolean;
   showButtons: boolean[] = [];
   users: any[];
+  groups: any[];
+  groupid: string;
+  groupname: string;
   messagess: any[];
   responseData: any;
   mreceverid: string;
+  groupchat: false;
+  singlechat: false;
   mreceverusername: string;
   messageEnable: boolean = false;
   messageForm: FormGroup;
+  GroupForm: FormGroup;
   sentmessages: Sendmessages;
   editmessages: EditMessageRequest;
   currentUser: string;
+  sentGroupName: RequestGroup;
   currentusername: string;
   getconverstion: ConversationHistoryRequest;
   public textArea: string = '';
-  constructor(private authService: UserService, private fb: FormBuilder, private confis: ConfigService, private toastr: ToastrService, private signalrService: SignalrService) {
+  connectedUsers$: any;
+  constructor(private authService: UserService, private fb: FormBuilder, private confis: ConfigService, private toastr: ToastrService, private signalrService: SignalrService, private groupService: GroupService) {
     this.showButtons = new Array(this.messages.length).fill(false);
-  
+ 
+
   }
   ngOnInit() {
     console.log(this.messageid);
     this.signalrService.startConnection();
     this.receiveMessage();
-    this.getUser();
     
+
+
+    this.getUser();
+
     this.messageForm = this.fb.group({
       message: ['', [Validators.required, Validators.minLength(1)]]
-    }); 
+    });
+    this.GroupForm = this.fb.group({
+      groupname: ['', [Validators.required, Validators.minLength(5)]]
+    });
     this.currentUser = this.confis.getCuurectuserid();
   }
-  getUser(){
+  createGroup() {
+    console.log("Modal Success" + this.messageForm);
+    this.sentGroupName = {
+      GroupName: this.GroupForm.get('groupname').value,
+      UserId: this.currentUser
+    }
+    this.groupService.creategroup(this.sentGroupName).subscribe(
+      (response: any) => {
+        this.closeModal();
+
+      },
+      (error) => {
+        console.log(error);
+        this.toastr.error('Error fetching data:', error);
+      }
+    );
+    this.GroupForm.reset();
+  }
+  getUser() {
     this.authService.getUser().subscribe(
       (response: any) => {
-
-        this.users = response;
+        console.log(response);
+        this.users = response.users;
+        this.groups = response.groups;
         console.log(this.users);
-        
+
       },
       (error) => {
         this.toastr.error('Error fetching data:', error);
@@ -65,25 +112,33 @@ export class ChatComponent {
     this.mreceverusername = recerverusername;
     this.messageEnable = true;
     this.currentusername = this.getUsernameById(this.currentUser);
-    this.getconverstion = {
-      UserId: receverid,
-      Before: new Date(),
-      Count: 30,
-      Sort: 'desc'
 
-    }
+    this.getmessagess();
+  }
+  groupreceverclick(groupid: any, groupnamee: any) {
+    console.log(groupid);
+    this.groupid = groupid;
+    this.mreceverid = "";
+    this.groupname = groupnamee;
+    this.messageEnable = true;
+    this.currentusername = this.getUsernameById(this.currentUser);
     this.getmessagess();
   }
   sendMessage(): void {
     console.log(this.messageid);
+
     if (this.messageForm.valid) {
       this.sentmessages = {
         ReceiverId: this.mreceverid,
         Content: this.messageForm.get('message').value,
-        SenderId: this.currentUser
+        SenderId: this.currentUser,
+        groupId: this.groupid
 
       }
+      console.log(this.sentmessages)
       if (this.messageid == null) {
+
+        console.log("")
         this.signalrService.sendMessage(this.sentmessages);
 
         // this.authService.sendMessage(this.sentmessages).subscribe(
@@ -128,7 +183,8 @@ export class ChatComponent {
       UserId: this.mreceverid,
       Before: new Date(),
       Count: 30,
-      Sort: 'desc'
+      Sort: 'desc',
+      groupId: this.groupid
 
     }
     this.authService.GetConversationHistory(this.getconverstion).subscribe(
@@ -157,12 +213,43 @@ export class ChatComponent {
     this.newMessage = '';
   }
   receiveMessage() {
-    this.signalrService.hubConnection.on('receiveMessage', (data) => {  // this.message=data;
+    this.signalrService.hubConnection.on('receiveMessage', (data) => {
       let myObject: any = JSON.parse(data);
       this.messagess.push(myObject);
       console.log(myObject);
     });
   }
+  GroupCreated() {
+    this.signalrService.hubConnection.on("GroupCreated", (data: any)=>{
+      this.connectedUsers$.next(data);
+    });
+  }
+  GroupNameUpdated() {
+    this.signalrService.hubConnection.on("GroupNameUpdated", (data: any)=>{
+      this.connectedUsers$.next(data);
+    });
+  }
+  AddedToGroup(){
+    this.signalrService.hubConnection.on("AddedToGroup", (data: any)=>{
+      this.connectedUsers$.next(data);
+    });
+  }
+  RemovedFromGroup(){
+    this.signalrService.hubConnection.on("RemovedFromGroup", (data: any)=>{
+      this.connectedUsers$.next(data);
+    });
+  }
+  NewMessageAdded(){
+    this.signalrService.hubConnection.on("NewMessageAdded", (data: any)=>{
+      this.connectedUsers$.next(data);
+    });
+  }
+  StatusUpdated(){
+    this.signalrService.hubConnection.on("StatusUpdated", (data: any)=>{
+      this.connectedUsers$.next(data);
+    });
+  }
+  
   getUsernameById(id: string): string {
     const user = this.users.find(user => user.userId === id);
     console.log(user)
@@ -213,4 +300,12 @@ export class ChatComponent {
       return 'Just now';
     }
   }
+  closeModal() {
+    const modalElement = this.exampleModal.nativeElement;
+    modalElement.modal('hide');
+  }
+  showHistoryOptions(){
+   
+  }
+  
 }

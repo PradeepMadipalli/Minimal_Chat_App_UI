@@ -30,16 +30,16 @@ export class LoginComponent {
   onSubmit() {
     this.authService.login(this.loginFrom.value).subscribe(
       data => {
-
+console.log(data);
         const token = this.config.getToken();
-      
-
-
+    
         this.responseData = data;
         sessionStorage.setItem("Profile", this.responseData.profiles);
         sessionStorage.setItem("Token", this.responseData.token);
         sessionStorage.setItem("userid", this.responseData.profiles.uId)
         this.router.navigate(['/chat']);
+
+
       },
       error => {
         this.toastr.error('Error fetching data:', error);

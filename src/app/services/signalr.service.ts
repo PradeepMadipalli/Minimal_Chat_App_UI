@@ -8,7 +8,20 @@ import { Sendmessages } from '../model/registration.model';
 })
 export class SignalrService {
   message: string;
-  constructor() { }
+  public messages$ = new BehaviorSubject<any>([]);
+  public connectedUsers$ = new BehaviorSubject<string[]>([]);
+  public messages: any[] = [];
+  public users: string[] = [];
+  constructor() { 
+    // this.hubConnection.on("ReceiveMessage", (user: string, message: string, messageTime: string)=>{
+    //   this.messages = [...this.messages, {user, message, messageTime} ];
+    //   this.messages$.next(this.messages);
+    // });
+
+    // this.hubConnection.on("ConnectedUser", (users: any)=>{
+    //   this.connectedUsers$.next(users);
+    // });
+  }
 
 
   hubConnection: signalR.HubConnection;
@@ -17,28 +30,44 @@ export class SignalrService {
     this.hubConnection = new signalR.HubConnectionBuilder()
       .withUrl('https://localhost:7288/chatHub', {
         skipNegotiation: true,
-        transport: signalR.HttpTransportType.WebSockets
+        transport: signalR.HttpTransportType.WebSockets,
       })
       .build();
-
+    
     this.hubConnection
       .start()
       .then(() => {
       })
       .catch(err => console.log('Error while starting connection: ' + err))
-  }
+    }
+  
 
 
   sendMessage(message: Sendmessages): Promise<any> {
-    console.log("saieswar");
+    console.log("Pradeep");
     const jsonmessa = JSON.stringify(message);
     return this.hubConnection.invoke<any>("sendMessages",jsonmessa)
   }
-  receiveMessage() {
-    this.hubConnection.on('receiveMessage', (data) => {
-      this.message = data;
-      console.log(data);
-    });
-
+  CreateGroup(groupName:string){
+    return this.hubConnection.invoke<any>("CreateGroup",groupName);
   }
+  EditGroupName(groupId:number,newName:string){
+    return this.hubConnection.invoke<any>("EditGroupName",{groupId,newName});
+  }
+  AddGroupMember(groupId:string,memberId:string){
+    return this.hubConnection.invoke<any>("AddGroupMember",{groupId,memberId});
+  }
+  RemoveGroupMember(groupId:string,memberId:string){
+    return this.hubConnection.invoke<any>("RemoveGroupMember",{groupId,memberId});
+  }
+  SendMessage(groupId:string,senderId:string,content:string){
+    return this.hubConnection.invoke<any>("SendMessage",{groupId,senderId,content});
+  }
+  SetStatus(userId:string, status:string){
+    return this.hubConnection.invoke<any>("SetStatus",{userId,status});
+  }
+  LeaveChat(){
+    return this.hubConnection.stop();
+  }
+
 }

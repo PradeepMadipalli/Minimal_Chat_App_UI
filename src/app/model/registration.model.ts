@@ -7,12 +7,14 @@ export class Sendmessages {
     ReceiverId: string;
     Content: string;
     SenderId: string;
+    groupId: string;
 }
 export class ConversationHistoryRequest {
     UserId: string;
     Before: Date;
     Count: number;
     Sort: string;
+    groupId: string;
 }
 export class EditMessageRequest {
     Messageid: string;
@@ -26,4 +28,9 @@ export class repMessage {
     ReceiverId: string;
     Content: string
     Timestamp: Date;
+
+}
+export class RequestGroup {
+    GroupName: string;
+    UserId: string;
 }

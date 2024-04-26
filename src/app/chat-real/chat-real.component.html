@@ -1,0 +1,294 @@
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
+<div class="container mt-5">
+    <button type="button" style="float: right;" class="btn btn-danger ml-5 mt-2" (click)="logout()">logout</button>
+</div>
+<div class="container">
+    
+    <div class="row clearfix">
+        <div class="col-lg-12">
+       
+            <div class="card chat-app">
+                <div id="plist" class="people-list">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" placeholder="Search...">
+                    </div>
+                  
+                    
+                    <ul class="list-unstyled chat-list mt-2 mb-0 nav nav-tabs" id="myTab" role="tablist" >
+                        <h5 class="font-weight-bold mt-2 text-center text-lg-start">Groups</h5>
+                   
+
+                        <li class="clearfix nav-item" *ngFor="let group of groups">
+                         
+                            <img (click)="openFileSelection()" [src]="uploadedPhotoUrl" alt="avatar">
+
+                            <input id="fileInput" type="file" (change)="onFileSelected($event)" style="display: none;">
+                            <div class="about nav-link" data-bs-toggle="tab"
+                            data-bs-target="#createGroup" role="tab" aria-controls="Create"
+                            (click)="groupreceverclick(group.groupId ,group.groupName)" aria-selected="false">
+                                <div class="name">{{group.groupName}}</div>
+                                <div class="status"> <i class="fa fa-circle offline"></i> left 7 mins ago </div>
+                            </div>
+                        </li>
+                        <h5 class="font-weight-bold mt-2 text-center text-lg-start">Members</h5>
+                        <li class="clearfix nav-item"  *ngFor="let user of users">
+                            
+                            <img (click)="openFileSelection()"  [src]="user.photoPath" alt="avatar">
+                        
+                            <div class="about nav-link" data-bs-toggle="tab"
+                            data-bs-target="#profile" role="tab" aria-controls="profile"
+                            (click)="receverclick(user.userId ,user.userName)" aria-selected="false">
+                                <div class="name">{{user.userName}}</div>
+                                <div class="status"> <i class="fa fa-circle offline"></i> left 7 mins ago </div>
+                            </div>
+                        </li>
+                    
+                
+                
+                    
+                    </ul>
+                </div>
+
+                <div class="chat tab-content" id="myTabContent">
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="chat-header clearfix">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+                                        <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="avatar">
+                                    </a>
+                                    <div class="chat-about">
+                                        <h6 class="m-b-0">{{ mreceverusername== null || undefined ? groupname : mreceverusername }}</h6>
+                                        <small>Last seen: 2 hours ago</small>
+                                    </div>
+                                </div>
+                                <div class="col-lg-12 hidden-sm text-right" style="float: right;">
+                                    <a href="javascript:void(0);" class="btn btn-outline-primary" data-bs-toggle="modal"
+                                    data-bs-target="#AddGroup" data-toggle="tooltip" title="Create Group"><i 
+                                            class="fa-solid fa-user-group" ></i></a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-secondary" data-toggle="tooltip" title="Choose Image"><i
+                                            class="fa fa-camera"></i></a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-primary" data-toggle="tooltip" title="Upload Image"><i
+                                            class="fa fa-image"></i></a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-info" data-toggle="tooltip" title="Settings"><i class="fa fa-cogs"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-history">
+                            <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
+                                (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
+                                <li class="clearfix" *ngIf="mess.senderId == currentUser">
+                                    <div class="message-data text-right">
+                                        <span class="message-data-time">{{currentusername + "
+                                            "}}{{getTimeElapsed(mess.timestamp)}} </span>
+                                        <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
+                                    </div>
+                                    <div class="message other-message float-right">
+                                        <p>
+                                            {{mess.content}}
+                                        </p>
+                                        <div *ngIf="showButtons[i]" style="float: right;">
+
+                                            <button (click)="editMessage(i)"><i
+                                                    class="fas fa-pen-to-square"></i></button>
+                                            <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+                                    <div class="message-data">
+                                        <span class="message-data-time">{{mreceverusername + " "}}{{getTimeElapsed(mess.timestamp)}}</span>
+                                    </div>
+                                    <div class="message my-message">
+                                        {{mess.content}}
+
+                                    </div>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="chat-message clearfix" *ngIf="messageEnable">
+                            <div class="input-group mb-0" [formGroup]="messageForm">
+
+                                <input formControlName="message" [(ngModel)]="textArea" id="textAreaExample2"
+                                    type="text" class="form-control" placeholder="Enter text here...">
+                                <button (click)="isEmojiPickerVisible = !isEmojiPickerVisible;">😀</button>
+                                <br /><emoji-mart class="emoji-mart" *ngIf="isEmojiPickerVisible"
+                                    (emojiSelect)="addEmoji($event)" title="Choose your emoji"></emoji-mart>
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" (click)="sendMessage()"
+                                        [class.disabled]="messageForm.invalid"><i class="fa fa-send"></i></span>
+
+                                </div>
+
+                            </div>
+
+                            <div
+                                *ngIf="messageForm.get('message').invalid && (messageForm.get('message').dirty || messageForm.get('message').touched)">
+                                <div *ngIf="messageForm.get('message').errors.required">Message is required.</div>
+                                <div *ngIf="messageForm.get('message').errors.minlength">Message must be at least 5
+                                    characters long.</div>
+                                <div *ngIf="messageForm.get('message').errors.maxlength">Message cannot exceed 100
+                                    characters.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="createGroup" role="tabpanel" aria-labelledby="profile-tab">
+                        <div class="chat-header clearfix">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+                                        <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="avatar">
+                                    </a>
+                                    <div class="chat-about">
+                                        <h6 class="m-b-0">{{ mreceverusername== null || undefined ? groupname : mreceverusername }}</h6>
+                                        <small>Last seen: 2 hours ago</small>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 hidden-sm text-right" style="float: right;">
+                                    <a href="javascript:void(0);"  class="btn btn-outline-primary"  data-bs-toggle="modal"
+                                    data-bs-target="#AddMember" data-toggle="tooltip" title="ADD User"><i class="fa fa-user-plus" aria-hidden="true"></i></a>
+                                    <a href="javascript:void(0);"  class="btn btn-outline-primary"  data-bs-toggle="modal"
+                                    data-bs-target="#AddMember1" data-toggle="tooltip" title="Group Member"><i class="fa fa-users" aria-hidden="true"></i></a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-secondary" data-toggle="tooltip" title="Choose Image"><i
+                                            class="fa fa-camera"></i></a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-primary" data-toggle="tooltip" title="Upload Image"><i
+                                            class="fa fa-image"></i></a>
+                                    <a href="javascript:void(0);" class="btn btn-outline-info" data-toggle="tooltip" title="Settings"><i class="fa fa-cogs"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-history">
+                            <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
+                                (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
+                                <li class="clearfix" *ngIf="mess.senderId == currentUser">
+                                    <div class="message-data text-right">
+                                        <span class="message-data-time">{{currentusername + "
+                                            "}}{{getTimeElapsed(mess.timestamp)}} </span>
+                                        <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
+                                    </div>
+                                    <div class="message other-message float-right">
+                                        <p>
+                                            {{mess.content}}
+                                        </p>
+                                        <div *ngIf="showButtons[i]" style="float: right;">
+
+                                            <button (click)="editMessage(i)"><i
+                                                    class="fas fa-pen-to-square"></i></button>
+                                            <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </li>
+                                <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+                                    <div class="message-data">
+                                        <span class="message-data-time">{{Getusergroupname(mess.senderId) + " "}}{{getTimeElapsed(mess.timestamp)}}</span>
+                                    </div>
+                                    <div class="message my-message">
+                                        {{mess.content}}
+
+                                    </div>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="chat-message clearfix" *ngIf="messageEnable">
+                            <div class="input-group mb-0" [formGroup]="messageForm">
+
+                                <input formControlName="message" [(ngModel)]="textArea" id="textAreaExample2" (keyup.enter)="sendMessage()"
+                                    type="text" class="form-control" placeholder="Enter text here...">
+                                <button (click)="isEmojiPickerVisible = !isEmojiPickerVisible;">😀</button>
+                                <br /><emoji-mart class="emoji-mart" *ngIf="isEmojiPickerVisible"
+                                    (emojiSelect)="addEmoji($event)" title="Choose your emoji"></emoji-mart>
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" (click)="sendMessage()"
+                                        [class.disabled]="messageForm.invalid"><i class="fa fa-send"></i></span>
+
+                                </div>
+
+                            </div>
+
+                            <div
+                                *ngIf="messageForm.get('message').invalid && (messageForm.get('message').dirty || messageForm.get('message').touched)">
+                                <div *ngIf="messageForm.get('message').errors.required">Message is required.</div>
+                                <div *ngIf="messageForm.get('message').errors.minlength">Message must be at least 5
+                                    characters long.</div>
+                                <div *ngIf="messageForm.get('message').errors.maxlength">Message cannot exceed 100
+                                    characters.</div>
+                            </div>
+                        </div>
+                    </div>
+                  
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+<div class="modal fade" id="AddGroup" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Create New Group</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" [formGroup]="GroupForm">
+                <label class="form-label" for="groupname">Group Name</label>
+                <input type="text" id="groupname" formControlName="groupname" class="form-control">
+            <br>
+                <ng-multiselect-dropdown
+  [placeholder]="'Add Members'"
+  [settings]="dropdownSettings"
+  [data]="users"
+  [(ngModel)]="selectedItems"
+  (onSelect)="onItemSelect($event)"
+  (onDeSelect)="onItemDeSelect($event)"
+>
+</ng-multiselect-dropdown>
+                <div
+                    *ngIf="GroupForm.get('groupname').invalid && (GroupForm.get('groupname').dirty || GroupForm.get('groupname').touched)">
+                    <div *ngIf="GroupForm.get('groupname').errors.required" class="redClass">Group Name is
+                        required.</div>
+                    <div *ngIf="GroupForm.get('groupname').errors.minlength" class="redClass">Group Name must be
+                        at least 5
+                        characters long.</div>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" (click)="createGroup()"
+                    [disabled]="GroupForm.invalid">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="AddMember" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Add Member</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ng-multiselect-dropdown
+  [placeholder]="'Add Members'"
+  [settings]="dropdownSettings"
+  [data]="users"
+  [(ngModel)]="selectedItems"
+  (onSelect)="onAddItemSelect($event)"
+  (onDeSelect)="onAddItemDeSelect($event)"
+>
+</ng-multiselect-dropdown>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" (click)="AddGroupMember()"
+                    >Add</button>
+            </div>
+        </div>
+    </div>
+</div>

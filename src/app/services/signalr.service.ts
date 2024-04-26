@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
-import { Sendmessages } from '../model/registration.model';
+import { Group, Sendmessages, UserList } from '../model/registration.model';
 
 @Injectable({
   providedIn: 'root'
@@ -40,22 +40,20 @@ export class SignalrService {
       })
       .catch(err => console.log('Error while starting connection: ' + err))
     }
-  
-
 
   sendMessage(message: Sendmessages): Promise<any> {
     console.log("Pradeep");
     const jsonmessa = JSON.stringify(message);
     return this.hubConnection.invoke<any>("sendMessages",jsonmessa)
   }
-  CreateGroup(groupName:string){
-    return this.hubConnection.invoke<any>("CreateGroup",groupName);
+  CreateGroup(groupName:string,userlist:string){
+    return this.hubConnection.invoke<any>("CreateGroup",groupName,userlist);
   }
   EditGroupName(groupId:number,newName:string){
     return this.hubConnection.invoke<any>("EditGroupName",{groupId,newName});
   }
   AddGroupMember(groupId:string,memberId:string){
-    return this.hubConnection.invoke<any>("AddGroupMember",{groupId,memberId});
+    return this.hubConnection.invoke<any>("AddGroupMember",groupId,memberId);
   }
   RemoveGroupMember(groupId:string,memberId:string){
     return this.hubConnection.invoke<any>("RemoveGroupMember",{groupId,memberId});
@@ -64,10 +62,17 @@ export class SignalrService {
     return this.hubConnection.invoke<any>("SendMessage",{groupId,senderId,content});
   }
   SetStatus(userId:string, status:string){
-    return this.hubConnection.invoke<any>("SetStatus",{userId,status});
+    return this.hubConnection.invoke<any>("SetStatus",{userId,status})  .catch(error => {
+      
+    });
+  }
+  ShowHistoryOptions(groupId:string,memberId:string,option:string){
+    return this.hubConnection.invoke<any>("ShowHistoryOptions",{groupId,memberId,option})
+    .catch(error => {
+      console.error('Error sending data:', error);
+    });
   }
   LeaveChat(){
     return this.hubConnection.stop();
   }
-
 }

@@ -34,3 +34,25 @@ export class RequestGroup {
     GroupName: string;
     UserId: string;
 }
+export class UserList
+{
+     UserId :string;
+     UserName:string;
+}
+export class AddUserList
+{
+     UserId :string;
+     UserName:string;
+     GroupId: string
+     GroupName :string
+}
+export class Group
+{
+    GroupId: string
+     GroupName :string
+}
+export class ProfilePhoto
+{
+    userid:string;
+    PhotoPath:string;
+}

@@ -1,33 +1,22 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfigService } from '../services/config.service';
-import { ConversationHistoryRequest, EditMessageRequest, RequestGroup, Sendmessages, repMessage } from '../model/registration.model';
-import { UserService } from '../services/user.service';
 import { ToastrService } from 'ngx-toastr';
+import { UserService } from '../services/user.service';
+import { AddUserList, ConversationHistoryRequest, EditMessageRequest, Group, ProfilePhoto, RequestGroup, Sendmessages, UserList } from '../model/registration.model';
 import { SignalrService } from '../services/signalr.service';
 import { GroupService } from '../services/group.service';
+import { IDropdownSettings } from 'ng-multiselect-dropdown';
+import { Subject } from 'rxjs';
 
 @Component({
-  selector: 'app-chat',
-  templateUrl: './chat.component.html',
-  styleUrl: './chat.component.scss'
+  selector: 'app-chat-real',
+  templateUrl: './chat-real.component.html',
+  styleUrl: './chat-real.component.scss'
 })
-export class ChatComponent  {
-uploadPhoto() {
-throw new Error('Method not implemented.');
-}
+export class ChatRealComponent implements OnInit {
   @ViewChild('exampleModal') exampleModal: ElementRef;
-
-  options = [
-    { value: '1', label: 'One' },
-    { value: '2', label: 'Two' },
-    { value: '3', label: 'Three' },
-    { value: '4', label: 'Four' },
-    { value: '5', label: 'Five' },
-    { value: '6', label: 'Six' },
-    { value: '7', label: 'Seven' },
-    { value: '8', label: 'Eight' },
-  ];
+  Group = new Subject<any>();
   messages: any[] = [];
   messageid: string;
   newMessage: string = '';
@@ -38,7 +27,7 @@ throw new Error('Method not implemented.');
   groups: any[];
   groupid: string;
   groupname: string;
-  messagess: any[];
+  messagess: any[]=[];
   responseData: any;
   mreceverid: string;
   groupchat: false;
@@ -47,29 +36,37 @@ throw new Error('Method not implemented.');
   messageEnable: boolean = false;
   messageForm: FormGroup;
   GroupForm: FormGroup;
+  MemberForm: FormGroup;
   sentmessages: Sendmessages;
   editmessages: EditMessageRequest;
   currentUser: string;
   sentGroupName: RequestGroup;
   currentusername: string;
-  groupimage :string="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-8.webp"
   getconverstion: ConversationHistoryRequest;
   public textArea: string = '';
   connectedUsers$: any;
+  selectedFile: File;
+  uploadedPhotoUrl: string;
+  profilePhotoModel:ProfilePhoto;
+  dropdownList = [];
+  selectedItems = [];
+  dropdownSettings: IDropdownSettings = {};
+  groupPanel: boolean;
+  ProfilePanel: boolean;
+  userlist: UserList[] = [];
+  addUserList:AddUserList[]=[];
   constructor(private authService: UserService, private fb: FormBuilder, private confis: ConfigService, private toastr: ToastrService, private signalrService: SignalrService, private groupService: GroupService) {
     this.showButtons = new Array(this.messages.length).fill(false);
- 
+
 
   }
   ngOnInit() {
     console.log(this.messageid);
     this.signalrService.startConnection();
     this.receiveMessage();
-    
-
-
+    this.NewGroupCreated();
     this.getUser();
-
+    this.uploadedPhotoUrl;
     this.messageForm = this.fb.group({
       message: ['', [Validators.required, Validators.minLength(1)]]
     });
@@ -77,6 +74,23 @@ throw new Error('Method not implemented.');
       groupname: ['', [Validators.required, Validators.minLength(5)]]
     });
     this.currentUser = this.confis.getCuurectuserid();
+    this.dropdownSettings = {
+      singleSelection: false,
+      idField: 'userId',
+      textField: 'userName',
+      enableCheckAll: false,
+      // selectAllText: 'Select All',
+      // unSelectAllText: 'UnSelect All',
+      itemsShowLimit: 3,
+      allowSearchFilter: true
+    };
+  }
+
+  NewGroupCreated() {
+    this.signalrService.hubConnection.on("GroupCreated", (data) => {
+      let myObject: any = JSON.parse(data);
+      this.groups.push(myObject);
+    });
   }
   createGroup() {
     console.log("Modal Success" + this.messageForm);
@@ -84,16 +98,8 @@ throw new Error('Method not implemented.');
       GroupName: this.GroupForm.get('groupname').value,
       UserId: this.currentUser
     }
-    this.groupService.creategroup(this.sentGroupName).subscribe(
-      (response: any) => {
-        this.closeModal();
-
-      },
-      (error) => {
-        console.log(error);
-        this.toastr.error('Error fetching data:', error);
-      }
-    );
+    this.signalrService.CreateGroup(this.GroupForm.get('groupname').value, JSON.stringify(this.userlist))
+    this.closeModal();
     this.GroupForm.reset();
   }
   getUser() {
@@ -101,8 +107,11 @@ throw new Error('Method not implemented.');
       (response: any) => {
         console.log(response);
         this.users = response.users;
-        this.groups = response.groups;
+
+        // sessionStorage.setItem('users',this.users);
+        this.groups = response.getGroups;
         console.log(this.users);
+
 
       },
       (error) => {
@@ -111,12 +120,12 @@ throw new Error('Method not implemented.');
     );
   }
   receverclick(receverid: any, recerverusername: any) {
-    console.log(receverid);
+    console.log("revere");
     this.mreceverid = receverid;
     this.mreceverusername = recerverusername;
     this.messageEnable = true;
+    this.groupid = "";
     this.currentusername = this.getUsernameById(this.currentUser);
-
     this.getmessagess();
   }
   groupreceverclick(groupid: any, groupnamee: any) {
@@ -169,7 +178,32 @@ throw new Error('Method not implemented.');
 
     }
   }
+  openFileSelection() {
+    document.getElementById('fileInput').click();
+  }
+  onFileSelected(event: any) {
+    this.selectedFile = event.target.files[0];
+    this.uploadPhoto();
+  }
+  uploadPhoto() {
+    console.log("upload");
+    if (this.selectedFile) {
+      this.authService.uploadProfilePhoto(this.selectedFile,)
+        .subscribe(photoUrl => {
+          console.log('Photo uploaded successfully:', photoUrl);
+          this.profilePhotoModel
+
+          this.uploadedPhotoUrl = photoUrl;
+        },
+        error => {
+          console.error('Upload error', error);
+          // Handle error
+        });
+    
+    }
+  }
   getmessagess() {
+    this.messagess = null;
     this.getconverstion = {
       UserId: this.mreceverid,
       Before: new Date(),
@@ -181,8 +215,7 @@ throw new Error('Method not implemented.');
     this.authService.GetConversationHistory(this.getconverstion).subscribe(
 
       response => {
-
-        this.messagess = response.messages;
+        this.messagess = response.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
         console.log('Message sent successfully:', this.messagess);
         this.messageForm.reset();
       },
@@ -210,37 +243,38 @@ throw new Error('Method not implemented.');
       console.log(myObject);
     });
   }
-  GroupCreated() {
-    this.signalrService.hubConnection.on("GroupCreated", (data: any)=>{
+
+  SetStatus() {
+    this.signalrService.hubConnection.on("GetUpdateUserStatus", (data: any) => {
       this.connectedUsers$.next(data);
     });
   }
   GroupNameUpdated() {
-    this.signalrService.hubConnection.on("GroupNameUpdated", (data: any)=>{
+    this.signalrService.hubConnection.on("GroupNameUpdated", (data: any) => {
       this.connectedUsers$.next(data);
     });
   }
-  AddedToGroup(){
-    this.signalrService.hubConnection.on("AddedToGroup", (data: any)=>{
+  AddedToGroup() {
+    this.signalrService.hubConnection.on("AddedToGroup", (data: any) => {
       this.connectedUsers$.next(data);
     });
   }
-  RemovedFromGroup(){
-    this.signalrService.hubConnection.on("RemovedFromGroup", (data: any)=>{
+  RemovedFromGroup() {
+    this.signalrService.hubConnection.on("RemovedFromGroup", (data: any) => {
       this.connectedUsers$.next(data);
     });
   }
-  NewMessageAdded(){
-    this.signalrService.hubConnection.on("NewMessageAdded", (data: any)=>{
+  NewMessageAdded() {
+    this.signalrService.hubConnection.on("NewMessageAdded", (data: any) => {
       this.connectedUsers$.next(data);
     });
   }
-  StatusUpdated(){
-    this.signalrService.hubConnection.on("StatusUpdated", (data: any)=>{
+  StatusUpdated() {
+    this.signalrService.hubConnection.on("StatusUpdated", (data: any) => {
       this.connectedUsers$.next(data);
     });
   }
-  
+
   getUsernameById(id: string): string {
     const user = this.users.find(user => user.userId === id);
     console.log(user)
@@ -269,13 +303,16 @@ throw new Error('Method not implemented.');
   toggleButtons(show: boolean, index: number) {
     this.showButtons[index] = show;
   }
-  public addEmoji(event) {
+  addEmoji(event) {
     this.textArea = `${this.textArea}${event.emoji.native}`;
     this.isEmojiPickerVisible = false;
   }
   getTimeElapsed(messageTimestamp: Date): string {
     const now = new Date();
+
     const message = new Date(messageTimestamp);
+    message.setHours(message.getHours() + 5);
+    message.setMinutes(message.getMinutes() + 30);
     const differenceMs = now.getTime() - message.getTime();
     const minutes = Math.floor(differenceMs / (1000 * 60));
     const hours = Math.floor(minutes / 60);
@@ -292,11 +329,28 @@ throw new Error('Method not implemented.');
     }
   }
   closeModal() {
-    const modalElement = this.exampleModal.nativeElement;
-    modalElement.modal('hide');
+  this.exampleModal.nativeElement.click();
   }
-  showHistoryOptions(){
-   
+  showHistoryOptions() {
+
   }
-  
+  Getusergroupname(senderId: any) {
+    return this.users.find(u => u.userId === senderId).userName;
+  }
+  onItemSelect(item: any) {
+    this.userlist.push(item);
+  }
+  onAddItemDeSelect(item:any){
+    this.addUserList.pop();
+  }
+  onItemDeSelect(item: any) {
+    this.userlist.pop();
+  }
+  onAddItemSelect(item:any){
+    this.addUserList.push(item);
+  }
+  AddGroupMember(){
+
+  }
+
 }

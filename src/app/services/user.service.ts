@@ -15,7 +15,12 @@ export class UserService {
       this.apiUrl = config.apiUrl;
     });
   }
+  uploadProfilePhoto(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append('photoFile', file);
 
+    return this.http.post<any>(`${this.apiUrl}/photo`, formData);
+  }
   getUser(): Observable<any> {
 
     const httpOptionss = {
@@ -26,7 +31,7 @@ export class UserService {
         'Access-Control-Allow-Headers': '*',
       })
     };
-    return this.http.get<any>(`${this.apiUrl}/users`, httpOptionss); // Adjust the API endpoint as needed
+    return this.http.get<any>(`${this.apiUrl}/users`, httpOptionss);
   }
 
   sendMessage(message: Sendmessages): Observable<any> {

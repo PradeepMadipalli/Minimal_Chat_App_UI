@@ -32,6 +32,8 @@ import { MdbScrollspyModule } from 'mdb-angular-ui-kit/scrollspy';
 import { MdbTabsModule } from 'mdb-angular-ui-kit/tabs';
 import { MdbTooltipModule } from 'mdb-angular-ui-kit/tooltip';
 import { MdbValidationModule } from 'mdb-angular-ui-kit/validation';
+import { ChatRealComponent } from './chat-real/chat-real.component';
+import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 
 @NgModule({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -39,7 +41,8 @@ import { MdbValidationModule } from 'mdb-angular-ui-kit/validation';
     AppComponent,
     RegistrationComponent,
     LoginComponent,
-    ChatComponent
+    ChatComponent,
+    ChatRealComponent
   ],
   imports: [
     BrowserModule,
@@ -67,7 +70,7 @@ import { MdbValidationModule } from 'mdb-angular-ui-kit/validation';
     MdbTooltipModule,
     MdbValidationModule,
     MdbCheckboxModule,
- 
+    NgMultiSelectDropDownModule.forRoot()
   ],
   providers: [provideHttpClient(withFetch()),AuthService,ConfigService,AuthguardService,SignalrService,
     {

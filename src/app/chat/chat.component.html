@@ -20,7 +20,7 @@
                                     data-bs-target="#createGroup" role="tab" type="button" aria-controls="profile"
                                     (click)="groupreceverclick(group.groupId ,group.groupName)" aria-selected="false">
                                     <div class="d-flex flex-row">
-                                        <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-8.webp"
+                                        <img (click)="uploadPhoto()" src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-8.webp"
                                             alt="avatar"
                                             class="rounded-circle d-flex align-self-center me-3 shadow-1strong"
                                             width="60">
@@ -58,11 +58,11 @@
                         <ul class="list-unstyled mb-0 nav nav-tabs" id="myTab" role="tablist"
                             *ngFor="let user of users">
                             <li class="p-2 border-bottom mb-1 nav-item" style="background-color: #eee;">
-                                <a class=" d-flex justify-content-between nav-link" data-bs-toggle="tab"
+                                <a class=" nav-link" data-bs-toggle="tab"
                                     data-bs-target="#profile" role="tab" type="button" aria-controls="profile"
                                     (click)="receverclick(user.userId ,user.userName)" aria-selected="false">
                                     <div class="d-flex flex-row">
-                                        <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-8.webp"
+                                        <img [src]=""
                                             alt="avatar"
                                             class="rounded-circle d-flex align-self-center me-3 shadow-1strong"
                                             width="60">

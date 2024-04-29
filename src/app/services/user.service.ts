@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ConversationHistoryRequest, EditMessageRequest, Sendmessages } from '../model/registration.model';
+import { ConversationHistoryRequest, EditMessageRequest, GroupUserRequest, Sendmessages } from '../model/registration.model';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config.service';
@@ -60,8 +60,24 @@ export class UserService {
         'Content-Type': 'application/json',
       })
     };
-    // const jsonString = JSON.stringify(message);
-    // console.log(jsonString);
     return this.http.post<any>(`${this.apiUrl}/EditMessage`, message, httpOptionss);
+  }
+  addGroupMember(groupId: string, memberId: string) {
+    const httpOptionss = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    };
+    return this.http.post<any>(`${this.apiUrl}/EditMessage`, memberId, httpOptionss);
+  }
+  getusergroup(groupid: GroupUserRequest): Observable<any> {
+    console.log("group");
+    console.log(groupid);
+    const httpOptionss = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    };
+    return this.http.post<any>(`${this.apiUrl}/GetuserGroups`, groupid,httpOptionss);
   }
 }

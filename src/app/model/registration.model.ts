@@ -56,3 +56,7 @@ export class ProfilePhoto
     userid:string;
     PhotoPath:string;
 }
+export class GroupUserRequest
+{
+    groupId:string;
+}

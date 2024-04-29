@@ -1,9 +1,9 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfigService } from '../services/config.service';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../services/user.service';
-import { AddUserList, ConversationHistoryRequest, EditMessageRequest, Group, ProfilePhoto, RequestGroup, Sendmessages, UserList } from '../model/registration.model';
+import { AddUserList, ConversationHistoryRequest, EditMessageRequest, Group, GroupUserRequest, ProfilePhoto, RequestGroup, Sendmessages, UserList } from '../model/registration.model';
 import { SignalrService } from '../services/signalr.service';
 import { GroupService } from '../services/group.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
@@ -16,6 +16,7 @@ import { Subject } from 'rxjs';
 })
 export class ChatRealComponent implements OnInit {
   @ViewChild('exampleModal') exampleModal: ElementRef;
+  @ViewChild('AddMember') AddMember: any;
   Group = new Subject<any>();
   messages: any[] = [];
   messageid: string;
@@ -24,10 +25,12 @@ export class ChatRealComponent implements OnInit {
   isEmojiPickerVisible: boolean;
   showButtons: boolean[] = [];
   users: any[];
+  userofgroups: any[];
   groups: any[];
+  userlistcount: number = 0;
   groupid: string;
   groupname: string;
-  messagess: any[]=[];
+  messagess: any[] = [];
   responseData: any;
   mreceverid: string;
   groupchat: false;
@@ -47,15 +50,24 @@ export class ChatRealComponent implements OnInit {
   connectedUsers$: any;
   selectedFile: File;
   uploadedPhotoUrl: string;
-  profilePhotoModel:ProfilePhoto;
+  profilePhotoModel: ProfilePhoto;
   dropdownList = [];
   selectedItems = [];
+  groupofuserlist: any[];
   dropdownSettings: IDropdownSettings = {};
   groupPanel: boolean;
   ProfilePanel: boolean;
-  userlist: UserList[] = [];
-  addUserList:AddUserList[]=[];
-  constructor(private authService: UserService, private fb: FormBuilder, private confis: ConfigService, private toastr: ToastrService, private signalrService: SignalrService, private groupService: GroupService) {
+  AddGroupMembertime: Date;
+  groupUserRequest: GroupUserRequest;
+  imagephoto: string = 'https://i.pinimg.com/originals/cc/b0/95/ccb0956f1d63cab069840c18224e9001.png';
+  userlist: any[] = [];
+  addUserList: AddUserList[] = [];
+  addUsermember: boolean = false;
+  userGrouplister: string = '[{\"userId\":\"a89660c1-fab3-42c7-ac58-e3ec0888378f\",\"userName\":\"RameshWaltair\",\"isDisabled\":false}]';
+  addmembertogroup: string;
+  constructor(private authService: UserService, private fb: FormBuilder,
+    private confis: ConfigService, private toastr: ToastrService,
+    private signalrService: SignalrService, private groupService: GroupService, private changeDetectorRef: ChangeDetectorRef) {
     this.showButtons = new Array(this.messages.length).fill(false);
 
 
@@ -63,9 +75,12 @@ export class ChatRealComponent implements OnInit {
   ngOnInit() {
     console.log(this.messageid);
     this.signalrService.startConnection();
+    var values  = JSON.parse(this.userGrouplister);
+    console.log(values + " testing");
     this.receiveMessage();
     this.NewGroupCreated();
     this.getUser();
+    this.getAddGroupMember();
     this.uploadedPhotoUrl;
     this.messageForm = this.fb.group({
       message: ['', [Validators.required, Validators.minLength(1)]]
@@ -79,11 +94,15 @@ export class ChatRealComponent implements OnInit {
       idField: 'userId',
       textField: 'userName',
       enableCheckAll: false,
-      // selectAllText: 'Select All',
-      // unSelectAllText: 'UnSelect All',
       itemsShowLimit: 3,
       allowSearchFilter: true
     };
+
+  }
+  cleanString(str) {
+    str = str.replace('"[', '[');
+    str = str.replace(']"', ']');
+    return str;
   }
 
   NewGroupCreated() {
@@ -120,6 +139,7 @@ export class ChatRealComponent implements OnInit {
     );
   }
   receverclick(receverid: any, recerverusername: any) {
+    this.addUsermember = false;
     console.log("revere");
     this.mreceverid = receverid;
     this.mreceverusername = recerverusername;
@@ -129,6 +149,7 @@ export class ChatRealComponent implements OnInit {
     this.getmessagess();
   }
   groupreceverclick(groupid: any, groupnamee: any) {
+    this.addUsermember = false;
     console.log(groupid);
     this.groupid = groupid;
     this.mreceverid = "";
@@ -136,7 +157,25 @@ export class ChatRealComponent implements OnInit {
     this.messageEnable = true;
     this.currentusername = this.getUsernameById(this.currentUser);
     this.getmessagess();
+    this.getuserGroup();
   }
+  getuserGroup() {
+    console.log("test group");
+    this.groupUserRequest = {
+      groupId: this.groupid
+    }
+    this.authService.getusergroup(this.groupUserRequest).subscribe(data => {
+      console.log(data);
+      console.log(data.length);
+      this.userlistcount = data.length;
+      this.groupofuserlist = data;
+    }, error => {
+
+    }
+    );
+
+  }
+
   sendMessage(): void {
     console.log(this.messageid);
 
@@ -191,15 +230,13 @@ export class ChatRealComponent implements OnInit {
       this.authService.uploadProfilePhoto(this.selectedFile,)
         .subscribe(photoUrl => {
           console.log('Photo uploaded successfully:', photoUrl);
-          this.profilePhotoModel
 
           this.uploadedPhotoUrl = photoUrl;
         },
-        error => {
-          console.error('Upload error', error);
-          // Handle error
-        });
-    
+          error => {
+            console.error('Upload error', error);
+          });
+
     }
   }
   getmessagess() {
@@ -329,7 +366,7 @@ export class ChatRealComponent implements OnInit {
     }
   }
   closeModal() {
-  this.exampleModal.nativeElement.click();
+    //this.exampleModal.nativeElement.click();
   }
   showHistoryOptions() {
 
@@ -340,17 +377,57 @@ export class ChatRealComponent implements OnInit {
   onItemSelect(item: any) {
     this.userlist.push(item);
   }
-  onAddItemDeSelect(item:any){
+  onAddItemDeSelect(item: any) {
     this.addUserList.pop();
   }
   onItemDeSelect(item: any) {
     this.userlist.pop();
   }
-  onAddItemSelect(item:any){
+  onAddItemSelect(item: any) {
     this.addUserList.push(item);
   }
-  AddGroupMember(){
+  AddGroupMember() {
 
+    this.signalrService.AddGroupMember(this.groupid, JSON.stringify(this.addUserList))
   }
+  isdisableuser() {
+    this.userofgroups = null;
+    this.selectedItems = null;
+    console.log("userdisable");
+    console.log(this.userofgroups);
+    this.users.forEach((item, i) => {
+      if (this.groupofuserlist.some(u => u.userId === item.userId)) {
+        this.users[i].isDisabled = true;
+      }
+      else {
+        this.users[i].isDisabled = false;
+      }
+    });
+    console.log(this.users);
+    this.userofgroups = this.users
+  }
+  getAddGroupMember() {
+    this.signalrService.hubConnection.on('AddedToGroupMember', (data:any) => {
+      let myObject: any = JSON.parse(data);
 
+      var username="";
+      var newmber="";
+      this.addUsermember = true;
+      myObject.userGrouplist.forEach(item => {
+
+        if (myObject.userGrouplist.length == 1) {
+
+          username = item.UserName;
+          newmber = " new group member add to Group";
+        } else {
+
+          username = username + " " + item.UserName + ","
+          newmber = " new group member's add to Group";
+        }
+      });
+
+      this.addmembertogroup = username + newmber;
+      this.AddGroupMembertime = new Date();
+    });
+  }
 }

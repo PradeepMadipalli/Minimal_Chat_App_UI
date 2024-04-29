@@ -67,7 +67,6 @@ throw new Error('Method not implemented.');
     this.receiveMessage();
     
 
-
     this.getUser();
 
     this.messageForm = this.fb.group({

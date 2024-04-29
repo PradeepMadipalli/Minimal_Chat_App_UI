@@ -268,3 +268,45 @@ body{
 .text-right {
     text-align: right !important;
 }
+*.icon-blue {color: #0088cc}
+*.icon-grey {color: grey}
+// i {   
+//     width:100px;
+//     text-align:center;
+//     vertical-align:middle;
+//     position: relative;
+// }
+.badge:after{
+    content:"100";
+    position: absolute;
+    background: rgba(0,0,255,1);
+    height:2rem;
+    top:1rem;
+    right:1.5rem;
+    width:2rem;
+    text-align: center;
+    line-height: 2rem;;
+    font-size: 1rem;
+    border-radius: 50%;
+    color:white;
+    border:1px solid blue;
+}
+fa-user-group[data-count]:after{
+    position:absolute;
+    right:0%;
+    top:1%;
+    content: attr(data-count);
+    font-size:70%;
+    padding:.6em;
+    border-radius:999px;
+    line-height:.75em;
+    color: white;
+    background:rgba(255,0,0,.85);
+    text-align:center;
+    min-width:2em;
+    font-weight:bold;
+  }
+  .txtsize{
+    font-size: 15px;
+    color:#e47297;
+  }

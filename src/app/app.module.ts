@@ -35,6 +35,7 @@ import { MdbTooltipModule } from 'mdb-angular-ui-kit/tooltip';
 import { MdbValidationModule } from 'mdb-angular-ui-kit/validation';
 import { ChatRealComponent } from './chat-real/chat-real.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
+import { CtrlFDetectorDirectiveDirective } from './chat-real/ctrl-fdetector-directive.directive';
 
 @NgModule({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -43,7 +44,8 @@ import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
     RegistrationComponent,
     LoginComponent,
     ChatComponent,
-    ChatRealComponent
+    ChatRealComponent,
+    CtrlFDetectorDirectiveDirective
   ],
   imports: [
     BrowserModule,

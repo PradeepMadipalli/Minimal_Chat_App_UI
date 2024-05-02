@@ -1,5 +1,5 @@
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
-<div class="container mt-5">
+<div class="container mt-5" (ctrlF)="showTooltip()">
     <button type="button" style="float: right;" class="btn btn-danger ml-5 mt-2" (click)="logout()">logout</button>
 </div>
 <div class="container">
@@ -11,12 +11,14 @@
                 <div id="plist" class="people-list">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fa fa-search"></i></span>
+                            <small>Status </small>
+                            <select name="language" id="language" [(ngModel)]="SelectedStatus"
+                                (change)="onSelectStatusChange()">
+                                <option *ngFor="let item of getStatuss" [value]="item.id"
+                                    [selected]="item.id===currectStatus">{{item.status}}</option>
+                            </select>
                         </div>
-                        <input type="text" class="form-control" placeholder="Search...">
                     </div>
-
-
                     <ul class="list-unstyled chat-list mt-2 mb-0 nav nav-tabs" id="myTab" role="tablist">
                         <h5 class="font-weight-bold mt-2 text-center text-lg-start">Groups</h5>
 
@@ -63,10 +65,12 @@
                                     <div class="chat-about">
                                         <h6 class="m-b-0">{{ mreceverusername== null || undefined ? groupname :
                                             mreceverusername }}</h6>
-                                        <small>Last seen: 2 hours ago</small>
+                                        <small>Last seen: 2 hours ago</small><br />
+
                                     </div>
+
                                 </div>
-                                <div class="col-lg-12 hidden-sm text-right" style="float: right;">
+                                <div class="col-lg-6 hidden-sm text-right" style="float: right;">
                                     <a href="javascript:void(0);" class="btn btn-outline-primary" data-bs-toggle="modal"
                                         data-bs-target="#AddGroup" data-toggle="tooltip" title="Create Group"><i
                                             class="fa-solid fa-user-group"></i></a>
@@ -79,39 +83,64 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="chat-history">
-                            <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
-                                (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
-                                <li class="clearfix" *ngIf="mess.senderId == currentUser">
-                                    <div class="message-data text-right">
-                                        <span class="message-data-time">{{currentusername + "
-                                            "}}{{getTimeElapsed(mess.timestamp)}} </span>
-                                        <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
-                                    </div>
-                                    <div class="message other-message float-right">
-                                        <p>
-                                            {{mess.content}}
-                                        </p>
-                                        <div *ngIf="showButtons[i]" style="float: right;">
+                        <div class="row">
+                            <div class="chat-history"  [class]="myClasscolBind?'col-lg-8':'col-lg-12'">
+                                <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
+                                    (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
+                                    <li class="clearfix" *ngIf="mess.senderId == currentUser">
+                                        <div class="message-data text-right">
+                                            <span class="message-data-time">{{currentusername + "
+                                                "}}{{getTimeElapsed(mess.timestamp)}} </span>
+                                            <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
+                                        </div>
+                                        <div class="message other-message float-right">
+                                            <p>
+                                                {{mess.content}}
+                                            </p>
+                                            <div *ngIf="showButtons[i]" style="float: right;">
 
-                                            <button (click)="editMessage(i)"><i
-                                                    class="fas fa-pen-to-square"></i></button>
-                                            <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                                <button (click)="editMessage(i)"><i
+                                                        class="fas fa-pen-to-square"></i></button>
+                                                <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+                                        <div class="message-data">
+                                            <span class="message-data-time">{{mreceverusername + "
+                                                "}}{{getTimeElapsed(mess.timestamp)}}</span>
+                                        </div>
+                                        <div class="message my-message">
+                                            {{mess.content}}
+
+                                        </div>
+                                    </li>
+
+                                </ul>
+                                
+                            </div>
+                            <div class="col-lg-4" *ngIf="messageVis">
+                                <div class="input-group mt-4">
+                                    <div class="form-outline" data-mdb-input-init>
+                                        <input type="search" id="form1" class="form-control"
+                                            [(ngModel)]="searchQuery" (input)="searchMessages()" placeholder="Search Messages" />
+                                        <label class="form-label" for="form1">Search</label>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" data-mdb-ripple-init>
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <div class="chatbox">
+                                    <div *ngIf="filteredMessages.length > 0; else noResults">
+                                        <div *ngFor="let message of filteredMessages">
+                                            <p>{{ Getusergroupname(message.senderId) }}: {{ message.content }}</p>
                                         </div>
                                     </div>
-                                </li>
-                                <li class="clearfix" *ngIf="mess.senderId !== currentUser">
-                                    <div class="message-data">
-                                        <span class="message-data-time">{{mreceverusername + "
-                                            "}}{{getTimeElapsed(mess.timestamp)}}</span>
-                                    </div>
-                                    <div class="message my-message">
-                                        {{mess.content}}
-
-                                    </div>
-                                </li>
-
-                            </ul>
+                                    <ng-template #noResults>
+                                        <p>No messages found.</p>
+                                    </ng-template>
+                                </div>
+                            </div>
                         </div>
                         <div class="chat-message clearfix" *ngIf="messageEnable">
                             <div class="input-group mb-0" [formGroup]="messageForm">
@@ -170,46 +199,84 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="chat-history">
-                            <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
-                                (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
-                                <li class="clearfix" *ngIf="mess.senderId == currentUser">
-                                    <div class="message-data text-right">
-                                        <span class="message-data-time">{{currentusername + "
-                                            "}}{{getTimeElapsed(mess.timestamp)}} </span>
-                                        <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
-                                    </div>
-                                    <div class="message other-message float-right">
-                                        <p>
-                                            {{mess.content}}
-                                        </p>
-                                        <div *ngIf="showButtons[i]" style="float: right;">
+                        <div class="row" >
+                            <div class="chat-history" [class]="myClasscolBind?'col-lg-8':'col-lg-12'">
 
-                                            <button (click)="editMessage(i)"><i
-                                                    class="fas fa-pen-to-square"></i></button>
-                                            <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
+                                    (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
+                                    <li class="clearfix" *ngIf="mess.senderId == currentUser">
+                                        <div class="message-data text-right">
+                                            <span class="message-data-time">{{currentusername + "
+                                                "}}{{getTimeElapsed(mess.timestamp)}} </span>
+                                            <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
                                         </div>
-                                    </div>
-                                </li>
-                                <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+                                        <div class="message other-message float-right">
+                                            <p>
+                                                {{mess.content}}
+                                            </p>
+                                            <div *ngIf="showButtons[i]" style="float: right;">
+
+                                                <button (click)="editMessage(i)"><i
+                                                        class="fas fa-pen-to-square"></i></button>
+                                                <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+                                        <div class="message-data">
+                                            <span class="message-data-time">{{Getusergroupname(mess.senderId) + "
+                                                "}}{{getTimeElapsed(mess.timestamp)}}</span>
+                                        </div>
+                                        <div class="message my-message">
+                                            {{mess.content}}
+
+                                        </div>
+                                    </li>
+
+                                </ul>
+                                <div class="clearfix" *ngIf="addUsermember">
                                     <div class="message-data">
-                                        <span class="message-data-time">{{Getusergroupname(mess.senderId) + "
-                                            "}}{{getTimeElapsed(mess.timestamp)}}</span>
+                                        <span class="message-data-time">{{getTimeElapsed(AddGroupMembertime)}}</span>
                                     </div>
                                     <div class="message my-message">
-                                        {{mess.content}}
+                                        {{addmembertogroup}}
 
                                     </div>
-                                </li>
-                                
-                            </ul>
-                            <div class="clearfix" *ngIf="addUsermember">
-                                <div class="message-data">
-                                    <span class="message-data-time">{{getTimeElapsed(AddGroupMembertime)}}</span>
+                                    <fieldset>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" class="radio" name="history"
+                                                value="y" id="history1" />
+                                            <label for="history1">ALL</label>
+                                            <input class="form-check-input" type="radio" class="radio" name="history"
+                                                value="z" id="history2" />
+                                            <label for="history2">Days</label>
+                                            <input class="form-check-input" type="radio" class="radio" name="history"
+                                                value="z" id="history3" />
+                                            <label for="history3">No</label>
+                                        </div>
+                                    </fieldset>
                                 </div>
-                                <div class="message my-message">
-                                    {{addmembertogroup}}
-
+                            </div>
+                            <div class="col-lg-4" *ngIf="messageVis">
+                                <div class="input-group mt-4">
+                                    <div class="form-outline" >
+                                        <input type="search" id="form1" style="border: 1px; border-color: black;" class="form-control"  [(ngModel)]="searchQuery"
+                                            (input)="searchMessages()" placeholder="Search Messages" />
+                                        <label class="form-label" for="form1">Search</label>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" data-mdb-ripple-init>
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <div class="chatbox">
+                                    <div *ngIf="filteredMessages.length > 0; else noResults">
+                                        <div *ngFor="let message of filteredMessages">
+                                            <p>{{ Getusergroupname(message.senderId) }}: {{ message.content }}</p>
+                                        </div>
+                                    </div>
+                                    <ng-template #noResults>
+                                        <p>No messages found.</p>
+                                    </ng-template>
                                 </div>
                             </div>
                         </div>
@@ -239,6 +306,7 @@
                                     characters.</div>
                             </div>
                         </div>
+
                     </div>
 
                 </div>

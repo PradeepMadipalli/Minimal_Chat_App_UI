@@ -310,3 +310,13 @@ fa-user-group[data-count]:after{
     font-size: 15px;
     color:#e47297;
   }
+  select{
+    border:none;
+    padding: 10px 20px;
+    border-radius:5px;
+  }
+  
+  select:focus{
+    outline:none;
+  }
+  

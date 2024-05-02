@@ -1,13 +1,14 @@
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfigService } from '../services/config.service';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../services/user.service';
-import { AddUserList, ConversationHistoryRequest, EditMessageRequest, Group, GroupUserRequest, ProfilePhoto, RequestGroup, Sendmessages, UserList } from '../model/registration.model';
+import { AddUserList, ConversationHistoryRequest, EditMessageRequest, Group, GroupUserRequest, ProfilePhoto, RequestGroup, Sendmessages, UpdateStatus, UserList } from '../model/registration.model';
 import { SignalrService } from '../services/signalr.service';
 import { GroupService } from '../services/group.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { Subject } from 'rxjs';
+
 
 @Component({
   selector: 'app-chat-real',
@@ -27,10 +28,13 @@ export class ChatRealComponent implements OnInit {
   users: any[];
   userofgroups: any[];
   groups: any[];
+  SelectedStatus: number;
   userlistcount: number = 0;
   groupid: string;
+  myClasscolBind: boolean = false;
   groupname: string;
   messagess: any[] = [];
+  filteredMessages:any[]=[];
   responseData: any;
   mreceverid: string;
   groupchat: false;
@@ -39,13 +43,17 @@ export class ChatRealComponent implements OnInit {
   messageEnable: boolean = false;
   messageForm: FormGroup;
   GroupForm: FormGroup;
+  messageVis: boolean = false;
   MemberForm: FormGroup;
   sentmessages: Sendmessages;
   editmessages: EditMessageRequest;
   currentUser: string;
+  sendCurrentStatus: UpdateStatus;
   sentGroupName: RequestGroup;
   currentusername: string;
   getconverstion: ConversationHistoryRequest;
+  getMessages:any[];
+  searchQuery: string = '';
   public textArea: string = '';
   connectedUsers$: any;
   selectedFile: File;
@@ -55,6 +63,9 @@ export class ChatRealComponent implements OnInit {
   selectedItems = [];
   groupofuserlist: any[];
   dropdownSettings: IDropdownSettings = {};
+  getStatuss: any[];
+  currectStatus: number;
+  isFindModalOpen: boolean = false;
   groupPanel: boolean;
   ProfilePanel: boolean;
   AddGroupMembertime: Date;
@@ -75,12 +86,14 @@ export class ChatRealComponent implements OnInit {
   ngOnInit() {
     console.log(this.messageid);
     this.signalrService.startConnection();
-    var values  = JSON.parse(this.userGrouplister);
+    var values = JSON.parse(this.userGrouplister);
     console.log(values + " testing");
     this.receiveMessage();
     this.NewGroupCreated();
     this.getUser();
     this.getAddGroupMember();
+    this.getStatusss();
+    this.getCurrectStatusss();
     this.uploadedPhotoUrl;
     this.messageForm = this.fb.group({
       message: ['', [Validators.required, Validators.minLength(1)]]
@@ -147,6 +160,7 @@ export class ChatRealComponent implements OnInit {
     this.groupid = "";
     this.currentusername = this.getUsernameById(this.currentUser);
     this.getmessagess();
+    this.filteredMessages = [];
   }
   groupreceverclick(groupid: any, groupnamee: any) {
     this.addUsermember = false;
@@ -158,6 +172,8 @@ export class ChatRealComponent implements OnInit {
     this.currentusername = this.getUsernameById(this.currentUser);
     this.getmessagess();
     this.getuserGroup();
+    this.filteredMessages = [];
+
   }
   getuserGroup() {
     console.log("test group");
@@ -395,23 +411,23 @@ export class ChatRealComponent implements OnInit {
     this.selectedItems = null;
     console.log("userdisable");
     console.log(this.userofgroups);
-    this.users.forEach((item, i) => {
-      if (this.groupofuserlist.some(u => u.userId === item.userId)) {
-        this.users[i].isDisabled = true;
-      }
-      else {
-        this.users[i].isDisabled = false;
-      }
-    });
-    console.log(this.users);
+    // this.users.forEach((item, i) => {
+    //   if (this.groupofuserlist.some(u => u.userId === item.userId)) {
+    //     this.users[i].isDisabled = true;
+    //   }
+    //   else {
+    //     this.users[i].isDisabled = false;
+    //   }
+    // });
+    // console.log(this.users);
     this.userofgroups = this.users
   }
   getAddGroupMember() {
-    this.signalrService.hubConnection.on('AddedToGroupMember', (data:any) => {
+    this.signalrService.hubConnection.on('AddedToGroupMember', (data: any) => {
       let myObject: any = JSON.parse(data);
 
-      var username="";
-      var newmber="";
+      var username = "";
+      var newmber = "";
       this.addUsermember = true;
       myObject.userGrouplist.forEach(item => {
 
@@ -429,5 +445,57 @@ export class ChatRealComponent implements OnInit {
       this.addmembertogroup = username + newmber;
       this.AddGroupMembertime = new Date();
     });
+  }
+  getStatusss() {
+    this.groupService.getStatus().subscribe((data) => {
+
+      this.getStatuss = data;
+      console.log(this.getStatuss);
+    }
+
+    )
+  }
+  getCurrectStatusss() {
+    this.groupService.getCurrectStatus().subscribe((data) => {
+      console.log(data);
+      this.currectStatus = data;
+
+    }
+    )
+    // updateUserStatus(){
+    //   this.StatusUpdated=
+    // }
+  }
+
+  onSelectStatusChange() {
+    this.sendCurrentStatus = {
+      status: this.SelectedStatus
+    }
+    this.groupService.updateStatus(this.sendCurrentStatus).subscribe((data) => {
+      this.getCurrectStatusss();
+    }
+
+    )
+  }
+
+  myClassBinding() {
+
+  }
+  showTooltip() {
+    console.log("controlF")
+    this.myClasscolBind = !this.myClasscolBind;
+    this.messageVis=!this.messageVis;
+  }
+  searchMessages(){
+    this.filteredMessages = null;
+    console.log("Called Munde");
+    if (!this.searchQuery.trim()) {
+      this.filteredMessages = [];
+      return;
+    }
+    this.filteredMessages = this.messagess.filter(message =>
+      message.content.toLowerCase().includes(this.searchQuery.toLowerCase())
+    );
+    console.log("Called");
   }
 }

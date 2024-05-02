@@ -60,3 +60,7 @@ export class GroupUserRequest
 {
     groupId:string;
 }
+export class UpdateStatus
+{
+  status:number;
+}

@@ -37,6 +37,7 @@ console.log(data);
         sessionStorage.setItem("Profile", this.responseData.profiles);
         sessionStorage.setItem("Token", this.responseData.token);
         sessionStorage.setItem("userid", this.responseData.profiles.uId)
+        sessionStorage.setItem("userid", this.responseData.profiles.uId)
         this.router.navigate(['/chat']);
 
 

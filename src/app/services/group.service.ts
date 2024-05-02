@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ConfigService } from './config.service';
 import { Observable } from 'rxjs';
-import { RequestGroup } from '../model/registration.model';
+import { RequestGroup, UpdateStatus } from '../model/registration.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,7 @@ export class GroupService {
       this.apiUrl = config.apiUrl;
     });
   }
-  
+
   creategroup(Groupname: RequestGroup): Observable<any> {
     console.log("creategroup")
     const httpOptionss = {
@@ -25,5 +25,24 @@ export class GroupService {
       })
     };
     return this.http.post<any>(`${this.apiUrl}/creategroup`, Groupname, httpOptionss);
+  }
+  getStatus() {
+    const httpOptionss = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    };
+    return this.http.get<any>(`${this.apiUrl}/getStatus`);
+  }
+  updateStatus(status: UpdateStatus) {
+    const httpOptionss = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      })
+    };
+    return this.http.post<any>(`${this.apiUrl}/updateStatus`, status, httpOptionss);
+  }
+  getCurrectStatus() {
+    return this.http.get<any>(`${this.apiUrl}/GetCurrentstatus`);
   }
 }

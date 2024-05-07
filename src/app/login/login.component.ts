@@ -30,7 +30,6 @@ export class LoginComponent {
   onSubmit() {
     this.authService.login(this.loginFrom.value).subscribe(
       data => {
-console.log(data);
         const token = this.config.getToken();
     
         this.responseData = data;

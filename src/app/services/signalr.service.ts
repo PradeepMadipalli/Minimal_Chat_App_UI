@@ -46,14 +46,14 @@ export class SignalrService {
     const jsonmessa = JSON.stringify(message);
     return this.hubConnection.invoke<any>("sendMessages", jsonmessa)
   }
-  CreateGroup(groupName: string, userlist: string) {
-    return this.hubConnection.invoke<any>("CreateGroup", groupName, userlist);
+  CreateGroup(groupName: string, userlist: string,userid:string) {
+    return this.hubConnection.invoke<any>("CreateGroup", groupName, userlist,userid);
   }
   EditGroupName(groupId: number, newName: string) {
     return this.hubConnection.invoke<any>("EditGroupName", { groupId, newName });
   }
-  AddGroupMember(groupId: string, memberId: string) {
-    return this.hubConnection.invoke<any>("AddGroupMember", groupId, memberId);
+  AddGroupMember(groupId: string, memberId: string,userid:string) {
+    return this.hubConnection.invoke<any>("AddGroupMember", groupId, memberId,userid);
   }
   RemoveGroupMember(groupId: string, memberId: string) {
     return this.hubConnection.invoke<any>("RemoveGroupMember", { groupId, memberId });

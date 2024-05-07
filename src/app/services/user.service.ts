@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ConversationHistoryRequest, EditMessageRequest, GroupUserRequest, Sendmessages } from '../model/registration.model';
+import { ConversationHistoryRequest, EditMessageRequest, GroupUserRequest, Sendmessages, UpdateShowOptions } from '../model/registration.model';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config.service';
@@ -8,7 +8,7 @@ import { ConfigService } from './config.service';
   providedIn: 'root'
 })
 export class UserService {
-
+  showoption: UpdateShowOptions;
   private apiUrl: string;
   constructor(private http: HttpClient, private configService: ConfigService) {
     this.configService.getConfig().subscribe(config => {
@@ -78,6 +78,17 @@ export class UserService {
         'Content-Type': 'application/json',
       })
     };
-    return this.http.post<any>(`${this.apiUrl}/GetuserGroups`, groupid,httpOptionss);
+    return this.http.post<any>(`${this.apiUrl}/GetuserGroups`, groupid, httpOptionss);
+  }
+  searchGIFs(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/search`);
+  }
+  showHistory(noofdays: string, messageId: string): Observable<any> {
+    this.showoption = {
+      noofdays: noofdays,
+      messageId: messageId
+    }
+    
+    return this.http.post<any>(`${this.apiUrl}/UpdateShowOption`, this.showoption);
   }
 }

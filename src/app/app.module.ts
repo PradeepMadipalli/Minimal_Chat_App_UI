@@ -36,6 +36,8 @@ import { MdbValidationModule } from 'mdb-angular-ui-kit/validation';
 import { ChatRealComponent } from './chat-real/chat-real.component';
 import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { CtrlFDetectorDirectiveDirective } from './chat-real/ctrl-fdetector-directive.directive';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { MessageFilterPipe } from './services/message-filter.pipe';
 
 @NgModule({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -45,7 +47,8 @@ import { CtrlFDetectorDirectiveDirective } from './chat-real/ctrl-fdetector-dire
     LoginComponent,
     ChatComponent,
     ChatRealComponent,
-    CtrlFDetectorDirectiveDirective
+    CtrlFDetectorDirectiveDirective,
+    MessageFilterPipe,
   ],
   imports: [
     BrowserModule,
@@ -73,7 +76,9 @@ import { CtrlFDetectorDirectiveDirective } from './chat-real/ctrl-fdetector-dire
     MdbTooltipModule,
     MdbValidationModule,
     MdbCheckboxModule,
-    NgMultiSelectDropDownModule.forRoot()
+    NgMultiSelectDropDownModule.forRoot(),
+    NgbModule,
+   
   ],
   providers: [provideHttpClient(withFetch()),AuthService,ConfigService,AuthguardService,SignalrService,
     {

@@ -1,17 +1,31 @@
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
-<div class="container mt-5" (ctrlF)="showTooltip()">
+<div class="container mt-5">
+    <div class="row clearfix">
+
+    </div>
     <button type="button" style="float: right;" class="btn btn-danger ml-5 mt-2" (click)="logout()">logout</button>
 </div>
+
 <div class="container">
 
     <div class="row clearfix">
+        <div class="input-group mt-4 col-lg-12" style="left:50%">
+            <div class="form-outline" data-mdb-input-init>
+                <input type="search" id="form1" class="form-control" [(ngModel)]="searchQuery"
+                    (input)="searchMessages()" placeholder="Search Messages" />
+                <label class="form-label" for="form1">Search</label>
+            </div>
+            <button type="button" class="btn btn-primary" data-mdb-ripple-init>
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
         <div class="col-lg-12">
 
             <div class="card chat-app">
                 <div id="plist" class="people-list">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <small>Status </small>
+                            <small>Status</small>
                             <select name="language" id="language" [(ngModel)]="SelectedStatus"
                                 (change)="onSelectStatusChange()">
                                 <option *ngFor="let item of getStatuss" [value]="item.id"
@@ -84,7 +98,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="chat-history"  [class]="myClasscolBind?'col-lg-8':'col-lg-12'">
+                            <div class="chat-history" [class]="myClasscolBind?'col-lg-8':'col-lg-12'">
                                 <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
                                     (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
                                     <li class="clearfix" *ngIf="mess.senderId == currentUser">
@@ -106,24 +120,27 @@
                                         </div>
                                     </li>
                                     <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+
+                                        <ng-template #popContent>Hello, <b></b>!</ng-template>
                                         <div class="message-data">
                                             <span class="message-data-time">{{mreceverusername + "
                                                 "}}{{getTimeElapsed(mess.timestamp)}}</span>
                                         </div>
-                                        <div class="message my-message">
+                                        <div class="message my-message" triggers="mouseenter:mouseleave"
+                                            [ngbPopover]="popContent">
                                             {{mess.content}}
 
                                         </div>
                                     </li>
 
                                 </ul>
-                                
+
                             </div>
                             <div class="col-lg-4" *ngIf="messageVis">
                                 <div class="input-group mt-4">
                                     <div class="form-outline" data-mdb-input-init>
-                                        <input type="search" id="form1" class="form-control"
-                                            [(ngModel)]="searchQuery" (input)="searchMessages()" placeholder="Search Messages" />
+                                        <input type="search" id="form1" class="form-control" [(ngModel)]="searchQuery"
+                                            (input)="searchMessages()" placeholder="Search Messages" />
                                         <label class="form-label" for="form1">Search</label>
                                     </div>
                                     <button type="button" class="btn btn-primary" data-mdb-ripple-init>
@@ -199,69 +216,87 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row" >
-                            <div class="chat-history" [class]="myClasscolBind?'col-lg-8':'col-lg-12'">
+                        <div class="row">
+                            <div #groupScr class="chat-history" [class]="myClasscolBind?'col-lg-8':'col-lg-12'">
 
-                                <ul class="m-b-0" *ngFor="let mess of messagess; let i = index"
+                                <ul class="m-b-0"
+                                    *ngFor="let mess of messagess | messageFilter:searchQuery ;let i = index"
                                     (mouseenter)="toggleButtons(true, i)" (mouseleave)="toggleButtons(false, i)">
-                                    <li class="clearfix" *ngIf="mess.senderId == currentUser">
+                                    <li class="clearfix" *ngIf="mess.senderId == currentUser && mess.receiverId==null">
                                         <div class="message-data text-right">
                                             <span class="message-data-time">{{currentusername + "
                                                 "}}{{getTimeElapsed(mess.timestamp)}} </span>
                                             <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
                                         </div>
                                         <div class="message other-message float-right">
-                                            <p>
-                                                {{mess.content}}
-                                            </p>
+                                            <span class="Replyinthread" *ngIf="mess.threadMessage!==null">
+                                                {{mess.threadMessage}}<i
+                                                    style="margin-left: 4px;background-color: #faf8f8; margin-bottom: 4px;"
+                                                    aria-hidden="true"></i></span>
+                                            <p *ngIf="mess.gifImageId===0">{{mess.content}}</p>
+                                            <p *ngIf="mess.gifImageId===1"><img [src]="mess.content"
+                                                    alt="Girl in a jacket" width="220" height="220"></p>
                                             <div *ngIf="showButtons[i]" style="float: right;">
 
                                                 <button (click)="editMessage(i)"><i
                                                         class="fas fa-pen-to-square"></i></button>
                                                 <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+                                                <button (click)="ReplyTheadBind(mess.content)"><i class="fa fa-reply"
+                                                        aria-hidden="true"></i></button>
                                             </div>
                                         </div>
                                     </li>
-                                    <li class="clearfix" *ngIf="mess.senderId !== currentUser">
+                                    <li class="clearfix" *ngIf="mess.senderId !== currentUser || mess.receiverId!=null">
                                         <div class="message-data">
                                             <span class="message-data-time">{{Getusergroupname(mess.senderId) + "
                                                 "}}{{getTimeElapsed(mess.timestamp)}}</span>
                                         </div>
                                         <div class="message my-message">
-                                            {{mess.content}}
+                                            <span class="Replyinthread"
+                                                *ngIf='mess.threadMessage!==null && mess.threadMessage!==""'>
+                                                {{mess.threadMessage}}<i
+                                                    style="margin-left: 4px; background-color: #746c6c; border: 1px solid #746c6c;"
+                                                    aria-hidden="true"></i></span>
+                                            <p *ngIf="mess.gifImageId===0">{{mess.content}}</p>
+                                            <p *ngIf="mess.gifImageId===1"><img [src]="mess.content"
+                                                    alt="Girl in a jacket" width="220" style="margin-top: 5px;"
+                                                    height="220"></p>
+                                        </div>
 
+                                        <div class="clearfix"
+                                            *ngIf="mess.receiverId!==null && mess.receiverId===currentUser && mess.showOptions===1">
+                                            <fieldset>
+                                                <div class="form-check">
+                                                    <input class="form-check-input"
+                                                        (change)="onOptionsSelected(optionAll,mess.messageId)"
+                                                        type="radio" class="radio" name="history" value="All"
+                                                        id="history1" />
+                                                    <label for="history1">ALL</label>
+                                                    <input class="form-check-input"
+                                                        (change)="onOptionsSelected(optionDays,mess.messageId)"
+                                                        type="radio" class="radio" name="history" value="Days"
+                                                        id="history2" data-bs-toggle="modal"
+                                                        data-bs-target="#ShowOptions" />
+                                                    <label for="history2">Days</label>
+                                                    <input class="form-check-input"
+                                                        (change)="onOptionsSelected(optionNo,mess.messageId)"
+                                                        type="radio" class="radio" name="history" value="No"
+                                                        id="history3" />
+                                                    <label for="history3">No</label>
+                                                </div>
+                                            </fieldset>
                                         </div>
                                     </li>
 
                                 </ul>
-                                <div class="clearfix" *ngIf="addUsermember">
-                                    <div class="message-data">
-                                        <span class="message-data-time">{{getTimeElapsed(AddGroupMembertime)}}</span>
-                                    </div>
-                                    <div class="message my-message">
-                                        {{addmembertogroup}}
 
-                                    </div>
-                                    <fieldset>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" class="radio" name="history"
-                                                value="y" id="history1" />
-                                            <label for="history1">ALL</label>
-                                            <input class="form-check-input" type="radio" class="radio" name="history"
-                                                value="z" id="history2" />
-                                            <label for="history2">Days</label>
-                                            <input class="form-check-input" type="radio" class="radio" name="history"
-                                                value="z" id="history3" />
-                                            <label for="history3">No</label>
-                                        </div>
-                                    </fieldset>
-                                </div>
                             </div>
                             <div class="col-lg-4" *ngIf="messageVis">
                                 <div class="input-group mt-4">
-                                    <div class="form-outline" >
-                                        <input type="search" id="form1" style="border: 1px; border-color: black;" class="form-control"  [(ngModel)]="searchQuery"
-                                            (input)="searchMessages()" placeholder="Search Messages" />
+                                    <div class="form-outline">
+                                        <input type="search" id="form1" style="border: 1px; border-color: black;"
+                                            class="form-control" [(ngModel)]="searchQuery" (input)="searchMessages()"
+                                            placeholder="Search Messages" />
                                         <label class="form-label" for="form1">Search</label>
                                     </div>
                                     <button type="button" class="btn btn-primary" data-mdb-ripple-init>
@@ -281,12 +316,19 @@
                             </div>
                         </div>
                         <div class="chat-message clearfix" *ngIf="messageEnable">
+                            <div style="background-color: white; height: 50PX ; width: auto;" *ngIf="replyinthreadbool">
+                                <span class="Replyinthread">
+                                    {{ThreadMessagee}}<i style="margin-left: 4px;" class="fa fa-times"
+                                        aria-hidden="true" (click)="replyinclose()"></i></span>
+                            </div>
                             <div class="input-group mb-0" [formGroup]="messageForm">
 
                                 <input formControlName="message" [(ngModel)]="textArea" id="textAreaExample2"
-                                    (keyup.enter)="sendMessage()" type="text" class="form-control"
+                                    (keyup.enter)="sendMessage()" type="text" style="border: 0px;" class="form-control"
                                     placeholder="Enter text here...">
                                 <button (click)="isEmojiPickerVisible = !isEmojiPickerVisible;">😀</button>
+
+                                <button (click)="searchGIFs()">GIF</button>
                                 <br /><emoji-mart class="emoji-mart" *ngIf="isEmojiPickerVisible"
                                     (emojiSelect)="addEmoji($event)" title="Choose your emoji"></emoji-mart>
                                 <div class="input-group-prepend">
@@ -386,6 +428,35 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="ShowOptions" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Options</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="text" [(ngModel)]="numberofDays" class="form-control"
+                    placeholder="Please enter no of days">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="AddoptinDays()">Add
+                    days</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div *ngIf="myClassgifBind">
+    <div class="containerss" [class]="myClassgifBind?'containerss':''">
+        <div class="items" *ngFor="let itm of gifUrls">
+            <img [src]="itm.url" alt="Girl in a jacket" width="75" height="70" (click)="gifimageClick(itm.url)">
         </div>
     </div>
 </div>

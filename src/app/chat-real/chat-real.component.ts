@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, HostListener, OnInit, ViewChild, viewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfigService } from '../services/config.service';
 import { ToastrService } from 'ngx-toastr';
@@ -9,19 +9,22 @@ import { GroupService } from '../services/group.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { Subject } from 'rxjs';
 
-
 @Component({
   selector: 'app-chat-real',
   templateUrl: './chat-real.component.html',
   styleUrl: './chat-real.component.scss'
 })
-export class ChatRealComponent implements OnInit {
+export class ChatRealComponent implements OnInit, AfterViewInit {
+  //@ViewChild('popover') popover!: MdbPopoverDirective;
+  @ViewChild('groupScrollMe') private groupScrollContainer!: ElementRef;
   @ViewChild('exampleModal') exampleModal: ElementRef;
   @ViewChild('AddMember') AddMember: any;
   Group = new Subject<any>();
   messages: any[] = [];
   messageid: string;
   newMessage: string = '';
+  replyinThread: string;
+  replyinthreadbool: boolean = false;
   editIndex: number = -1;
   isEmojiPickerVisible: boolean;
   showButtons: boolean[] = [];
@@ -34,17 +37,25 @@ export class ChatRealComponent implements OnInit {
   myClasscolBind: boolean = false;
   groupname: string;
   messagess: any[] = [];
-  filteredMessages:any[]=[];
+  filteredMessages: any[] = [];
   responseData: any;
   mreceverid: string;
   groupchat: false;
   singlechat: false;
+  optionAll: string = "All";
+  optionDays: string = "Days";
+  optionNo: string = "No";
+  numberofDays: any = null;
+  showoptionsbool: boolean = false;
   mreceverusername: string;
   messageEnable: boolean = false;
   messageForm: FormGroup;
   GroupForm: FormGroup;
   messageVis: boolean = false;
   MemberForm: FormGroup;
+  GifImageIdd: number = 0;
+  ThreadMessagee: string = null;
+  ShowOptionss: number = 0;
   sentmessages: Sendmessages;
   editmessages: EditMessageRequest;
   currentUser: string;
@@ -52,7 +63,7 @@ export class ChatRealComponent implements OnInit {
   sentGroupName: RequestGroup;
   currentusername: string;
   getconverstion: ConversationHistoryRequest;
-  getMessages:any[];
+  getMessages: any[];
   searchQuery: string = '';
   public textArea: string = '';
   connectedUsers$: any;
@@ -68,7 +79,11 @@ export class ChatRealComponent implements OnInit {
   isFindModalOpen: boolean = false;
   groupPanel: boolean;
   ProfilePanel: boolean;
+  myClassgifBind: boolean = false;
   AddGroupMembertime: Date;
+  gifinserturl: string;
+  ShowSendOption: any;
+  ShowSendMessage: any;
   groupUserRequest: GroupUserRequest;
   imagephoto: string = 'https://i.pinimg.com/originals/cc/b0/95/ccb0956f1d63cab069840c18224e9001.png';
   userlist: any[] = [];
@@ -76,13 +91,13 @@ export class ChatRealComponent implements OnInit {
   addUsermember: boolean = false;
   userGrouplister: string = '[{\"userId\":\"a89660c1-fab3-42c7-ac58-e3ec0888378f\",\"userName\":\"RameshWaltair\",\"isDisabled\":false}]';
   addmembertogroup: string;
+  gifUrls: any[];
   constructor(private authService: UserService, private fb: FormBuilder,
     private confis: ConfigService, private toastr: ToastrService,
     private signalrService: SignalrService, private groupService: GroupService, private changeDetectorRef: ChangeDetectorRef) {
     this.showButtons = new Array(this.messages.length).fill(false);
-
-
   }
+
   ngOnInit() {
     console.log(this.messageid);
     this.signalrService.startConnection();
@@ -112,6 +127,9 @@ export class ChatRealComponent implements OnInit {
     };
 
   }
+  ngAfterViewInit(): void {
+    this.groupScrollContainer.nativeElement.scrollTop = this.groupScrollContainer.nativeElement.scrollHeight;
+  }
   cleanString(str) {
     str = str.replace('"[', '[');
     str = str.replace(']"', ']');
@@ -130,7 +148,7 @@ export class ChatRealComponent implements OnInit {
       GroupName: this.GroupForm.get('groupname').value,
       UserId: this.currentUser
     }
-    this.signalrService.CreateGroup(this.GroupForm.get('groupname').value, JSON.stringify(this.userlist))
+    this.signalrService.CreateGroup(this.GroupForm.get('groupname').value, JSON.stringify(this.userlist), this.currentUser)
     this.closeModal();
     this.GroupForm.reset();
   }
@@ -194,14 +212,26 @@ export class ChatRealComponent implements OnInit {
 
   sendMessage(): void {
     console.log(this.messageid);
+    var message: any;
+    if (this.GifImageIdd === 1) {
+      console.log("GifUrl");
+      console.log(this.gifinserturl);
+      message = this.gifinserturl
+    }
+    else {
+      console.log("Message");
+      message = this.messageForm.get('message').value
 
-    if (this.messageForm.valid) {
+    }
+    if (this.messageForm.valid || this.GifImageIdd == 1) {
       this.sentmessages = {
         ReceiverId: this.mreceverid,
-        Content: this.messageForm.get('message').value,
+        Content: message,
         SenderId: this.currentUser,
-        groupId: this.groupid
-
+        groupId: this.groupid,
+        GifImageId: this.GifImageIdd,
+        ThreadMessage: this.ThreadMessagee,
+        ShowOptions: this.ShowOptionss
       }
       console.log(this.sentmessages)
       if (this.messageid == null) {
@@ -209,6 +239,11 @@ export class ChatRealComponent implements OnInit {
         console.log("")
         this.signalrService.sendMessage(this.sentmessages);
         this.messageForm.reset();
+        this.GifImageIdd = 0;
+        this.ShowOptionss = 0;
+        this.ThreadMessagee = null;
+        this.replyinclose();
+        this.closegif();
       }
       else {
         this.editmessages = {
@@ -221,7 +256,7 @@ export class ChatRealComponent implements OnInit {
             this.getmessagess();
             this.messageid = null;
             console.log('Message sent successfully:', response);
-            this.messageForm.reset();
+
           },
           error => {
             this.toastr.error('Error sending message:', error);
@@ -271,6 +306,11 @@ export class ChatRealComponent implements OnInit {
         this.messagess = response.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
         console.log('Message sent successfully:', this.messagess);
         this.messageForm.reset();
+        this.GifImageIdd = 0;
+        this.ShowOptionss = 0;
+        this.ThreadMessagee = null;
+        this.replyinclose();
+
       },
       error => {
         console.error('Error sending message:', error);
@@ -291,6 +331,7 @@ export class ChatRealComponent implements OnInit {
   }
   receiveMessage() {
     this.signalrService.hubConnection.on('receiveMessage', (data) => {
+      console.log("sent message");
       let myObject: any = JSON.parse(data);
       this.messagess.push(myObject);
       console.log(myObject);
@@ -404,7 +445,7 @@ export class ChatRealComponent implements OnInit {
   }
   AddGroupMember() {
 
-    this.signalrService.AddGroupMember(this.groupid, JSON.stringify(this.addUserList))
+    this.signalrService.AddGroupMember(this.groupid, JSON.stringify(this.addUserList), this.currentUser)
   }
   isdisableuser() {
     this.userofgroups = null;
@@ -484,18 +525,99 @@ export class ChatRealComponent implements OnInit {
   showTooltip() {
     console.log("controlF")
     this.myClasscolBind = !this.myClasscolBind;
-    this.messageVis=!this.messageVis;
+    this.messageVis = !this.messageVis;
   }
-  searchMessages(){
-    this.filteredMessages = null;
-    console.log("Called Munde");
-    if (!this.searchQuery.trim()) {
-      this.filteredMessages = [];
-      return;
-    }
-    this.filteredMessages = this.messagess.filter(message =>
-      message.content.toLowerCase().includes(this.searchQuery.toLowerCase())
-    );
+  searchMessages() {
+    // this.filteredMessages = this.messagess;
+    // console.log("Called Munde");
+    // console.log(this.searchQuery);
+    // if (this.searchQuery) {
+    //   this.messagess = this.messagess.filter(message =>
+    //     message.content.toLowerCase().includes(this.searchQuery.toLowerCase())
+    //   );
+    // } else {
+    //   console.log("ALL");
+    //   this.messagess = this.filteredMessages;
+    // }
+
     console.log("Called");
+  }
+  //   onPopoverShow(event: MdbPopoverDirective): void {
+  //     console.log('popover show: ', event);
+  //   }
+  // }
+  searchGIFs(): void {
+    this.myClassgifBind = !this.myClassgifBind;
+    this.authService.searchGIFs().subscribe(gifUrls => {
+      this.gifUrls = gifUrls;
+      console.log(this.gifUrls);
+    });
+  }
+  onOptionsSelected(option: any, messageid: any) {
+    // console.log(messageid);
+    // console.log(option)
+    this.ShowSendOption = option;
+    this.ShowSendMessage = messageid;
+    if (option === this.optionDays) {
+      this.showoptionsbool = !this.showoptionsbool
+      this.numberofDays = this.numberofDays
+    }
+    else if (option === this.optionAll) {
+      if (this.showoptionsbool) {
+        this.showoptionsbool = !this.showoptionsbool
+
+      }
+      this.numberofDays = "-1"
+
+    } else {
+      if (this.showoptionsbool) {
+        this.showoptionsbool = !this.showoptionsbool
+
+      }
+      this.numberofDays = "0"
+    }
+    if (this.numberofDays !== null) {
+      this.authService.showHistory(this.numberofDays, messageid).subscribe(data => {
+
+        if (this.showoptionsbool) {
+          this.showoptionsbool = !this.showoptionsbool
+          this.numberofDays = null;
+
+        }
+        this.getmessagess();
+        this.ShowSendOption = null;
+        this.ShowSendMessage = null;
+
+      }, error => {
+
+      });
+    }
+
+
+  }
+  gifimageClick(inserturl: any) {
+    this.GifImageIdd = 1;
+    this.gifinserturl = inserturl;
+    this.sendMessage();
+  }
+  ReplyTheadBind(replymessage: any) {
+    this.replyinthreadbool = !this.replyinthreadbool
+    this.ThreadMessagee = replymessage;
+  }
+  replyinclose() {
+    if (this.replyinthreadbool) {
+      this.replyinthreadbool = !this.replyinthreadbool
+      this.ThreadMessagee = null;
+    }
+
+  }
+  closegif() {
+    if (this.myClassgifBind) {
+      this.myClassgifBind = !this.myClassgifBind;
+    }
+
+  }
+  AddoptinDays() {
+    this.onOptionsSelected(this.ShowSendOption, this.ShowSendMessage);
   }
 }

@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @import "mdb-angular-ui-kit/assets/scss/mdb.scss";
-@import "mdb-angular-ui-kit/assets/scss/mdb.scss";
+ @import "mdb-angular-ui-kit/assets/scss/mdb.scss";
 
 .background-radial-gradient {
     background-color: hsl(218, 41%, 15%);
@@ -69,3 +69,23 @@
   width: 400px;
 }@import '@fortawesome/fontawesome-free/css/all.css';
 
+
+/* Importing Bootstrap SCSS file. */
+@import 'bootstrap/scss/bootstrap';
+.items {
+  width: 100%
+}
+.containerss {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.containerss>div {
+  flex: 0 32%;
+  /*demo*/
+  box-sizing:border-box
+}
+.Replyinthread{
+  background-color: #E8E8E8; padding: 10px; margin-left: 6px; margin-left: 10PX; border-radius: 6PX;  margin-bottom: 8px;
+  
+}

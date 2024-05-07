@@ -135,7 +135,11 @@ throw new Error('Method not implemented.');
         ReceiverId: this.mreceverid,
         Content: this.messageForm.get('message').value,
         SenderId: this.currentUser,
-        groupId: this.groupid
+        groupId: this.groupid,
+        GifImageId: 0,
+        ThreadMessage: "",
+        ShowOptions: 0
+      
 
       }
       console.log(this.sentmessages)

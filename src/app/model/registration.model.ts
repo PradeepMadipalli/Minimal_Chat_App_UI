@@ -8,6 +8,9 @@ export class Sendmessages {
     Content: string;
     SenderId: string;
     groupId: string;
+    GifImageId: number;
+    ThreadMessage: string;
+    ShowOptions: number;
 }
 export class ConversationHistoryRequest {
     UserId: string;
@@ -23,7 +26,6 @@ export class EditMessageRequest {
 export class repMessage {
 
     MessageId: string;
-
     SenderId: string;
     ReceiverId: string;
     Content: string
@@ -34,33 +36,31 @@ export class RequestGroup {
     GroupName: string;
     UserId: string;
 }
-export class UserList
-{
-     UserId :string;
-     UserName:string;
+export class UserList {
+    UserId: string;
+    UserName: string;
 }
-export class AddUserList
-{
-     UserId :string;
-     UserName:string;
-     GroupId: string
-     GroupName :string
-}
-export class Group
-{
+export class AddUserList {
+    UserId: string;
+    UserName: string;
     GroupId: string
-     GroupName :string
+    GroupName: string
 }
-export class ProfilePhoto
-{
-    userid:string;
-    PhotoPath:string;
+export class Group {
+    GroupId: string
+    GroupName: string
 }
-export class GroupUserRequest
-{
-    groupId:string;
+export class ProfilePhoto {
+    userid: string;
+    PhotoPath: string;
 }
-export class UpdateStatus
-{
-  status:number;
+export class GroupUserRequest {
+    groupId: string;
+}
+export class UpdateStatus {
+    status: number;
+}
+export class UpdateShowOptions{
+    noofdays:string;
+    messageId:string;
 }

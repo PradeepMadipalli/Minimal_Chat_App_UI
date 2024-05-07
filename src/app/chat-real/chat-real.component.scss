@@ -319,4 +319,45 @@ fa-user-group[data-count]:after{
   select:focus{
     outline:none;
   }
+  @keyframes smooth-appear {
+    to{
+      bottom: 20px;
+      opacity:1;
+    }
+  }
+  .containerss {
+    background: #CECECE;
+    color:white;
+    padding: 20px;
+    position: fixed;
+    bottom: -100%;
+    opacity:0;
+    left: 60%;
+    margin: 75px;
+    height: 400px;
+    width: 300px;
+    transform: translateX(-10%);
+    border-radius: 6px;
+    animation: smooth-appear 0s ease forwards;
+  }
+  .classgit{
+    opacity: 0;
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+  }
+ 
+//   .columns {
+//     float: left;
+//     width: 33.33%;
+//     padding: 5px;
+//   }
   
+//   /* Clearfix (clear floats) */
+//   .rows::after {
+//     content: "";
+//     clear: both;
+//     display: table;
+//   }

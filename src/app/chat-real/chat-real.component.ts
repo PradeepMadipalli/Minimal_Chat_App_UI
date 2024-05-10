@@ -3,11 +3,14 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfigService } from '../services/config.service';
 import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../services/user.service';
-import { AddUserList, ConversationHistoryRequest, EditMessageRequest, Group, GroupUserRequest, ProfilePhoto, RequestGroup, Sendmessages, UpdateStatus, UserList } from '../model/registration.model';
+import { AddUserList, ConversationHistoryRequest, DeleteUserFromGroup, EditGroupName, EditMessageRequest, Group, GroupUserRequest, ProfilePhoto, RequestGroup, Sendmessages, UpdateStatus, UserList } from '../model/registration.model';
 import { SignalrService } from '../services/signalr.service';
 import { GroupService } from '../services/group.service';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { Subject } from 'rxjs';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { PopupComponent } from '../popup/popup.component';
+
 
 @Component({
   selector: 'app-chat-real',
@@ -16,11 +19,13 @@ import { Subject } from 'rxjs';
 })
 export class ChatRealComponent implements OnInit, AfterViewInit {
   //@ViewChild('popover') popover!: MdbPopoverDirective;
+  @ViewChild('popmessage') myButton: ElementRef;
   @ViewChild('groupScrollMe') private groupScrollContainer!: ElementRef;
   @ViewChild('exampleModal') exampleModal: ElementRef;
   @ViewChild('AddMember') AddMember: any;
   Group = new Subject<any>();
   messages: any[] = [];
+  currentUserphoto: any;
   messageid: string;
   newMessage: string = '';
   replyinThread: string;
@@ -30,6 +35,7 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   showButtons: boolean[] = [];
   users: any[];
   userofgroups: any[];
+  popupOpen = false;
   groups: any[];
   SelectedStatus: number;
   userlistcount: number = 0;
@@ -61,31 +67,39 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   currentUser: string;
   sendCurrentStatus: UpdateStatus;
   sentGroupName: RequestGroup;
+  editGroupname: EditGroupName;
   currentusername: string;
   getconverstion: ConversationHistoryRequest;
   getMessages: any[];
+  setStatus: any = 'Set Status';
   searchQuery: string = '';
   public textArea: string = '';
   connectedUsers$: any;
+  editgroupnames: string;
+  deleteUsersFromGroup: DeleteUserFromGroup;
   selectedFile: File;
   uploadedPhotoUrl: string;
   profilePhotoModel: ProfilePhoto;
   dropdownList = [];
+  setStatuss: boolean = false;
   selectedItems = [];
   groupofuserlist: any[];
   dropdownSettings: IDropdownSettings = {};
   getStatuss: any[];
-  currectStatus: number;
+  currectStatus: any;
   isFindModalOpen: boolean = false;
   groupPanel: boolean;
   ProfilePanel: boolean;
   myClassgifBind: boolean = false;
   AddGroupMembertime: Date;
+  popmessage: any;
+  teststatus: any = 'Do not disturb';
   gifinserturl: string;
   ShowSendOption: any;
   ShowSendMessage: any;
+  setSelectedStatus: any;
   groupUserRequest: GroupUserRequest;
-  imagephoto: string = 'https://i.pinimg.com/originals/cc/b0/95/ccb0956f1d63cab069840c18224e9001.png';
+  imagephoto: string = "https://i.pinimg.com/originals/cc/b0/95/ccb0956f1d63cab069840c18224e9001.png";
   userlist: any[] = [];
   addUserList: AddUserList[] = [];
   addUsermember: boolean = false;
@@ -94,7 +108,8 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   gifUrls: any[];
   constructor(private authService: UserService, private fb: FormBuilder,
     private confis: ConfigService, private toastr: ToastrService,
-    private signalrService: SignalrService, private groupService: GroupService, private changeDetectorRef: ChangeDetectorRef) {
+    private signalrService: SignalrService, private groupService: GroupService,
+    private changeDetectorRef: ChangeDetectorRef, public dialog: MatDialog) {
     this.showButtons = new Array(this.messages.length).fill(false);
   }
 
@@ -103,6 +118,7 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
     this.signalrService.startConnection();
     var values = JSON.parse(this.userGrouplister);
     console.log(values + " testing");
+    this.currentUser = this.confis.getCuurectuserid();
     this.receiveMessage();
     this.NewGroupCreated();
     this.getUser();
@@ -116,7 +132,7 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
     this.GroupForm = this.fb.group({
       groupname: ['', [Validators.required, Validators.minLength(5)]]
     });
-    this.currentUser = this.confis.getCuurectuserid();
+
     this.dropdownSettings = {
       singleSelection: false,
       idField: 'userId',
@@ -161,7 +177,9 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
         // sessionStorage.setItem('users',this.users);
         this.groups = response.getGroups;
         console.log(this.users);
-
+        console.log("userid=" + this.currentUser)
+        this.currentUserphoto = this.users.find(a => a.userId === this.currentUser).photoPath;
+        console.log("current=" + this.currentUserphoto);
 
       },
       (error) => {
@@ -190,9 +208,11 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
     this.currentusername = this.getUsernameById(this.currentUser);
     this.getmessagess();
     this.getuserGroup();
-    this.filteredMessages = [];
+    // 
+
 
   }
+
   getuserGroup() {
     console.log("test group");
     this.groupUserRequest = {
@@ -270,23 +290,29 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   }
   openFileSelection() {
     document.getElementById('fileInput').click();
+
   }
   onFileSelected(event: any) {
     this.selectedFile = event.target.files[0];
+
     this.uploadPhoto();
+    var reader = new FileReader();
+    reader.readAsDataURL(event.target.files[0]);
+    reader.onload = (event) => {
+      this.currentUserphoto = event.target.result;
+    }
   }
   uploadPhoto() {
     console.log("upload");
-    if (this.selectedFile) {
-      this.authService.uploadProfilePhoto(this.selectedFile,)
-        .subscribe(photoUrl => {
-          console.log('Photo uploaded successfully:', photoUrl);
 
-          this.uploadedPhotoUrl = photoUrl;
-        },
-          error => {
-            console.error('Upload error', error);
-          });
+    if (this.selectedFile) {
+      this.authService.uploadProfilePhoto(this.selectedFile).subscribe(data => {
+        console.log('Photo uploaded successfully:', data);
+        //this.getUser();
+      },
+        error => {
+          console.error('Upload error', error);
+        });
 
     }
   }
@@ -305,11 +331,22 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
       response => {
         this.messagess = response.messages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
         console.log('Message sent successfully:', this.messagess);
+        response.popmessage;
+        if (response.popmessage != null) {
+          if (response.popmessage.receiverId !== null && response.popmessage.receiverId === this.currentUser && response.popmessage.showOptions === 1) {
+            this.ShowSendMessage = response.popmessage.messageId
+            this.openDialog();
+          }
+
+        }
         this.messageForm.reset();
         this.GifImageIdd = 0;
         this.ShowOptionss = 0;
         this.ThreadMessagee = null;
         this.replyinclose();
+        // if (this.groupid !== null) {
+        //   this.messagess.find(a => a.receverid == this.mreceverid);
+        // }
 
       },
       error => {
@@ -317,6 +354,27 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
         this.messagess = null;
       }
     );
+  }
+  deleteUserFromGroup(userid: any) {
+    this.deleteUsersFromGroup = {
+      userId: userid,
+      groupId: this.groupid,
+    }
+    console.log(this.deleteUsersFromGroup);
+    return this.authService.deleteuserfromgroup(this.deleteUsersFromGroup).subscribe(data => {
+
+      this.getuserGroup();
+    });
+  }
+  editgroupname() {
+    this.editGroupname = {
+      groupId: this.groupid,
+      groupName: this.groupname
+    }
+    return this.authService.editgroupMName(this.editGroupname).subscribe(data => {
+      console.log(data);
+      this.getUser();
+    })
   }
   logout() {
     this.confis.logout();
@@ -489,9 +547,9 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   }
   getStatusss() {
     this.groupService.getStatus().subscribe((data) => {
-
+      console.log("getstatus " + data);
       this.getStatuss = data;
-      console.log(this.getStatuss);
+      console.log(this.getStatuss[0].status + "status");
     }
 
     )
@@ -499,8 +557,7 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   getCurrectStatusss() {
     this.groupService.getCurrectStatus().subscribe((data) => {
       console.log(data);
-      this.currectStatus = data;
-
+      this.currectStatus = data.status;
     }
     )
     // updateUserStatus(){
@@ -509,11 +566,22 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
   }
 
   onSelectStatusChange() {
+    var onlinesstatus: any = "";
+    if (this.setSelectedStatus != null && this.SelectedStatus===this.setStatus) {
+      onlinesstatus = this.setSelectedStatus;
+    } else {
+      onlinesstatus = this.SelectedStatus
+    }
     this.sendCurrentStatus = {
-      status: this.SelectedStatus
+      status: onlinesstatus
     }
     this.groupService.updateStatus(this.sendCurrentStatus).subscribe((data) => {
       this.getCurrectStatusss();
+      this.getStatusss();
+      this.setSelectedStatus = null;
+      if (this.setStatuss) {
+        this.setStatuss = !this.setStatuss;
+      }
     }
 
     )
@@ -578,7 +646,7 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
     }
     if (this.numberofDays !== null) {
       this.authService.showHistory(this.numberofDays, messageid).subscribe(data => {
-
+        console.log("call options");
         if (this.showoptionsbool) {
           this.showoptionsbool = !this.showoptionsbool
           this.numberofDays = null;
@@ -617,7 +685,63 @@ export class ChatRealComponent implements OnInit, AfterViewInit {
     }
 
   }
-  AddoptinDays() {
-    this.onOptionsSelected(this.ShowSendOption, this.ShowSendMessage);
+  AddoptinDays(numberofDayss: any) {
+    // this.ShowSendOption='All';
+    // this.ShowSendMessage="rtuygfljhiytfj"
+    // console.log("show dilog call");
+    // this.onOptionsSelected(this.ShowSendOption, this.ShowSendMessage);
+
+    if (numberofDayss !== null) {
+      this.authService.showHistory(numberofDayss, this.ShowSendMessage).subscribe(data => {
+        if (this.showoptionsbool) {
+          this.showoptionsbool = !this.showoptionsbool
+          this.numberofDays = null;
+
+        }
+        this.getmessagess();
+        this.ShowSendOption = null;
+        this.ShowSendMessage = null;
+
+      }, error => {
+
+      });
+    }
   }
+  onGroupnamechange(groupname: any) {
+    this.editGroupname = groupname;
+  }
+  openDialog() {
+    const dialogRef = this.dialog.open(PopupComponent, {
+      height: '280px',
+      width: '380px',
+      data: {
+        animal: 'panda'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result != null) {
+        this.AddoptinDays(result);
+      }
+
+      console.log(`Dialog result: ${result}`);
+    });
+  }
+  // CloseDialog() {
+  //   this.dialogref.afterClosed().subscribe(result => {
+  //     console.log(`Dialog result: ${result}`); // Pizza!
+  //     this.AddoptinDays();
+  //   });
+  // }
+  onSelectStatusChangess() {
+    if (this.SelectedStatus == this.setStatus) {
+      this.setStatuss = !this.setStatuss     
+    }
+    else {
+      if (this.setStatuss) {
+        this.setStatuss = !this.setStatuss;
+      }
+      this.onSelectStatusChange()
+    }
+  }
+
 }

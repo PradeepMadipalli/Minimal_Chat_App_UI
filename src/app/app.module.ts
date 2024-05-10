@@ -38,6 +38,9 @@ import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { CtrlFDetectorDirectiveDirective } from './chat-real/ctrl-fdetector-directive.directive';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MessageFilterPipe } from './services/message-filter.pipe';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { PopupComponent } from './popup/popup.component';
+import {MAT_DIALOG_DEFAULT_OPTIONS, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 
 @NgModule({
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -49,11 +52,14 @@ import { MessageFilterPipe } from './services/message-filter.pipe';
     ChatRealComponent,
     CtrlFDetectorDirectiveDirective,
     MessageFilterPipe,
+    PopupComponent,
   ],
   imports: [
+    
     BrowserModule,
     AppRoutingModule,
     FormsModule,
+    CommonModule,
     ReactiveFormsModule,
     HttpClientModule,
     ToastrModule.forRoot(),
@@ -78,7 +84,7 @@ import { MessageFilterPipe } from './services/message-filter.pipe';
     MdbCheckboxModule,
     NgMultiSelectDropDownModule.forRoot(),
     NgbModule,
-   
+    MatDialogModule,
   ],
   providers: [provideHttpClient(withFetch()),AuthService,ConfigService,AuthguardService,SignalrService,
     {
@@ -86,6 +92,9 @@ import { MessageFilterPipe } from './services/message-filter.pipe';
     useClass: AuthInterceptor,
     multi: true,
   },
+    provideAnimationsAsync(),
+    {provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: {hasBackdrop: false}},
+    
 
 ],
   bootstrap: [AppComponent]

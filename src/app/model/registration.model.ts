@@ -64,3 +64,15 @@ export class UpdateShowOptions{
     noofdays:string;
     messageId:string;
 }
+export class DeleteUserFromGroup{
+    userId:string;
+    groupId:string;
+}
+export class EditGroupName{
+    
+    groupId:string;
+    groupName:string;
+}
+export interface DialogData {
+    animal: 'panda' | 'unicorn' | 'lion';
+  }

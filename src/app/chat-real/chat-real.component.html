@@ -1,9 +1,14 @@
 <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 <div class="container mt-5">
     <div class="row clearfix">
-
+        <div class="input-group mt-4 col-lg-12" style="left:50%">
+            <img (click)="openFileSelection()" style="left:80%;" [src]="currentUserphoto" width="60px" height="60px"
+                alt="avatar">
+        </div>
     </div>
-    <button type="button" style="float: right;" class="btn btn-danger ml-5 mt-2" (click)="logout()">logout</button>
+    <div>
+        <button type="button" style="float: right;" class="btn btn-danger ml-5 mt-2" (click)="logout()">logout</button>
+    </div>
 </div>
 
 <div class="container">
@@ -25,12 +30,17 @@
                 <div id="plist" class="people-list">
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <small>Status</small>
-                            <select name="language" id="language" [(ngModel)]="SelectedStatus"
-                                (change)="onSelectStatusChange()">
-                                <option *ngFor="let item of getStatuss" [value]="item.id"
-                                    [selected]="item.id===currectStatus">{{item.status}}</option>
+                            <small>Status : </small>
+
+                            <select class="form-select" name="language" id="language" [(ngModel)]="SelectedStatus"
+                                (change)="onSelectStatusChangess()">
+                                <option *ngFor="let item of getStatuss" [selected]="item.status==currectStatus">
+                                    {{item.status}}<i class="fas fa-pen-to-square"></i> </option>
+
                             </select>
+                            <input type="text" name="example" *ngIf="setStatuss" class="form-control" list="language"
+                                [(ngModel)]="setSelectedStatus" (keyup.enter)="onSelectStatusChange()">
+
                         </div>
                     </div>
                     <ul class="list-unstyled chat-list mt-2 mb-0 nav nav-tabs" id="myTab" role="tablist">
@@ -53,6 +63,7 @@
                         <li class="clearfix nav-item" *ngFor="let user of users">
 
                             <img (click)="openFileSelection()" [src]="user.photoPath" alt="avatar">
+
 
                             <div class="about nav-link" data-bs-toggle="tab" data-bs-target="#profile" role="tab"
                                 aria-controls="profile" (click)="receverclick(user.userId ,user.userName)"
@@ -116,6 +127,7 @@
                                                 <button (click)="editMessage(i)"><i
                                                         class="fas fa-pen-to-square"></i></button>
                                                 <button (click)="deleteMessage(i)"><i class="fas fa-trash"></i></button>
+
                                             </div>
                                         </div>
                                     </li>
@@ -194,7 +206,10 @@
                                     </a>
                                     <div class="chat-about">
                                         <h6 class="m-b-0">{{ mreceverusername== null || undefined ? groupname :
-                                            mreceverusername }}</h6>
+                                            mreceverusername }}<button #popmessage style="float: right;"
+                                                data-bs-toggle="modal" data-bs-target="#EditGroupName"><i
+                                                    class="fa fa-pencil-square-o" aria-hidden="true"
+                                                    (change)="onGroupnamechange(groupname)"></i></button></h6>
                                         <small>Last seen: 2 hours ago</small>
                                     </div>
                                 </div>
@@ -229,6 +244,7 @@
                                             <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar">
                                         </div>
                                         <div class="message other-message float-right">
+
                                             <span class="Replyinthread" *ngIf="mess.threadMessage!==null">
                                                 {{mess.threadMessage}}<i
                                                     style="margin-left: 4px;background-color: #faf8f8; margin-bottom: 4px;"
@@ -261,31 +277,13 @@
                                             <p *ngIf="mess.gifImageId===1"><img [src]="mess.content"
                                                     alt="Girl in a jacket" width="220" style="margin-top: 5px;"
                                                     height="220"></p>
+                                            <div *ngIf="showButtons[i] && mess.receiverId==null" style="float: right;">
+                                                <button (click)="ReplyTheadBind(mess.content)"><i class="fa fa-reply"
+                                                        aria-hidden="true"></i></button>
+                                            </div>
                                         </div>
 
-                                        <div class="clearfix"
-                                            *ngIf="mess.receiverId!==null && mess.receiverId===currentUser && mess.showOptions===1">
-                                            <fieldset>
-                                                <div class="form-check">
-                                                    <input class="form-check-input"
-                                                        (change)="onOptionsSelected(optionAll,mess.messageId)"
-                                                        type="radio" class="radio" name="history" value="All"
-                                                        id="history1" />
-                                                    <label for="history1">ALL</label>
-                                                    <input class="form-check-input"
-                                                        (change)="onOptionsSelected(optionDays,mess.messageId)"
-                                                        type="radio" class="radio" name="history" value="Days"
-                                                        id="history2" data-bs-toggle="modal"
-                                                        data-bs-target="#ShowOptions" />
-                                                    <label for="history2">Days</label>
-                                                    <input class="form-check-input"
-                                                        (change)="onOptionsSelected(optionNo,mess.messageId)"
-                                                        type="radio" class="radio" name="history" value="No"
-                                                        id="history3" />
-                                                    <label for="history3">No</label>
-                                                </div>
-                                            </fieldset>
-                                        </div>
+
                                     </li>
 
                                 </ul>
@@ -384,7 +382,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" (click)="createGroup()"
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="createGroup()"
                     [disabled]="GroupForm.invalid">Create</button>
             </div>
         </div>
@@ -405,7 +403,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" (click)="AddGroupMember()">Add</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="AddGroupMember()">Add</button>
             </div>
         </div>
     </div>
@@ -416,13 +414,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">Users</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <ul class="list-group" *ngFor="let users of groupofuserlist">
-                    <li class="list-group-item">{{users.userName}}</li>
+                    <li class="list-group-item">{{users.userName}}<button style="float: right;"
+                            (click)="deleteUserFromGroup(users.userId)"><i class="fa fa-trash"
+                                aria-hidden="true"></i></button></li>
                 </ul>
             </div>
             <div class="modal-footer">
@@ -431,28 +429,7 @@
         </div>
     </div>
 </div>
-<div class="modal fade" id="ShowOptions" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-    aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Options</h5>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <input type="text" [(ngModel)]="numberofDays" class="form-control"
-                    placeholder="Please enter no of days">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="AddoptinDays()">Add
-                    days</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 <div *ngIf="myClassgifBind">
     <div class="containerss" [class]="myClassgifBind?'containerss':''">
         <div class="items" *ngFor="let itm of gifUrls">
@@ -460,3 +437,30 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="EditGroupName" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Edit Groupname</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <input type="text" [(ngModel)]="groupname" class="form-control" required #name="ngModel"
+                        minlength="4" placeholder="Enter group name">
+                </div>
+                <div *ngIf="name.invalid && (name.dirty || name.touched)" class="alert alert-danger">
+                    <div *ngIf="name.errors?.['required']">Groupname is required.</div>
+                    <div *ngIf="name.errors?.['minlength']">Groupname must be at least 4 characters long.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="editgroupname()">
+                        Done</button>
+                </div>
+            </div>
+        </div>
+    </div>

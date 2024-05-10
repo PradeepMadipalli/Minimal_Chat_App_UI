@@ -11,6 +11,10 @@
     "strictPropertyInitialization": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
+    "types": [
+      "node"
+    ],
+
     "sourceMap": true,
     "declaration": false,
     "experimentalDecorators": true,
